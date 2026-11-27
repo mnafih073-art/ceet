@@ -1,0 +1,2834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CEET — Free AI-Free Image to Excel Converter</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Tesseract.js v5 (Local Browser WebAssembly OCR) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- SheetJS (xlsx) for Genuine Excel Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              blue: '#0052FF',
+              cyan: '#00C6FF',
+              accent: '#2563EB',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #FFFFFF;
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .ceet-wordmark {
+      background: linear-gradient(135deg, #0044EE 0%, #0077FF 48%, #00C6FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: #0072FF;
+    }
+
+    /* Custom subtle scrollbars for spreadsheet & preview panels */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F8FAFC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    .sheet-cell:focus {
+      outline: 2px solid #2563EB;
+      outline-offset: -2px;
+      background-color: #EFF6FF;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white text-[#111827]">
+
+  <!-- ==================== GLOBAL TOAST / NOTIFICATION BANNER ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- ==================== NAVIGATION BAR ==================== -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-[#E5E7EB]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left: Primary CEET Logo + Blue-Cyan Wordmark -->
+        <a href="#home" onclick="navigateTo('home')" class="flex items-center gap-2.5 group focus:outline-none">
+          <!-- High-Precision SVG matching Primary Logo (3D vibrant blue-to-cyan layered ribbon 'E') -->
+          <svg class="w-9 h-9 shrink-0 transition-transform duration-200 group-hover:scale-105" viewBox="0 0 120 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CEET Logo">
+            <defs>
+              <linearGradient id="ceetTopGrad" x1="18" y1="15" x2="108" y2="28" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0038E0"/>
+                <stop offset="55%" stop-color="#0084FF"/>
+                <stop offset="100%" stop-color="#00E5FF"/>
+              </linearGradient>
+              <linearGradient id="ceetMidGrad" x1="20" y1="45" x2="100" y2="68" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0052FF"/>
+                <stop offset="50%" stop-color="#00A6FF"/>
+                <stop offset="100%" stop-color="#00F0FF"/>
+              </linearGradient>
+              <linearGradient id="ceetBotGrad" x1="22" y1="80" x2="106" y2="112" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#002BB8"/>
+                <stop offset="48%" stop-color="#007BFF"/>
+                <stop offset="100%" stop-color="#00E5FF"/>
+              </linearGradient>
+              <linearGradient id="ceetSpineGrad" x1="18" y1="12" x2="45" y2="118" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0044EE"/>
+                <stop offset="50%" stop-color="#0095FF"/>
+                <stop offset="100%" stop-color="#00D4FF"/>
+              </linearGradient>
+            </defs>
+            <!-- Deep shadow spine fold -->
+            <path d="M22 28C22 16 32 10 48 10C72 10 92 14 108 5C112 18 104 34 86 38C68 42 46 34 44 50L44 102C44 112 28 118 22 116V28Z" fill="#0029A3"/>
+            <!-- Top Ribbon Wing -->
+            <path d="M22 34C22 15 36 10 58 11C80 12 96 13 108 4C112 17 103 33 84 37C67 40 50 32 39 40C29 47 22 66 22 92V34Z" fill="url(#ceetTopGrad)"/>
+            <!-- Top Inner Cyan Highlight Fold -->
+            <path d="M22 64C22 42 36 25 62 22C78 20 92 22 101 18C88 26 70 25 54 31C36 38 25 56 22 86V64Z" fill="#00E5FF" fill-opacity="0.85"/>
+            <!-- Middle Ribbon Wing -->
+            <path d="M23 114C23 82 32 54 56 49C74 45 86 55 98 48C101 59 93 74 76 77C60 80 48 72 38 80C29 87 24 101 23 114Z" fill="url(#ceetMidGrad)"/>
+            <!-- Middle Cyan Ridge -->
+            <path d="M24 105C26 77 37 56 58 51C71 48 82 54 93 51C82 58 70 55 57 59C40 64 29 82 24 112V105Z" fill="#29F0FF" fill-opacity="0.8"/>
+            <!-- Bottom Ribbon Wing -->
+            <path d="M23 116C28 96 42 84 64 84C84 84 95 88 106 80C110 93 100 110 78 114C56 118 36 115 23 116Z" fill="url(#ceetBotGrad)"/>
+            <!-- Bottom Cyan Highlight -->
+            <path d="M24 115C31 97 45 86 65 86C81 86 92 89 102 83C93 92 80 91 65 92C46 93 33 102 24 116Z" fill="#00F0FF" fill-opacity="0.85"/>
+          </svg>
+          <span class="text-2xl font-extrabold tracking-tight ceet-wordmark select-none">CEET</span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden lg:flex items-center gap-1" id="desktop-nav">
+          <button onclick="navigateTo('home')" data-nav="home" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition">Home</button>
+          <button onclick="navigateToSection('features')" data-nav="features" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">Features</button>
+          <button onclick="navigateToSection('how-it-works')" data-nav="how-it-works" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">How It Works</button>
+          <button onclick="navigateTo('converter')" data-nav="converter" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">Workspace</button>
+          <button onclick="navigateTo('history')" data-nav="history" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition flex items-center gap-1.5">
+            History
+            <span id="nav-history-badge" class="hidden text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-[#2563EB]">0</span>
+          </button>
+          <button onclick="navigateTo('settings')" data-nav="settings" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">Settings</button>
+          <button onclick="navigateTo('about')" data-nav="about" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">About</button>
+          <button onclick="navigateTo('privacy')" data-nav="privacy" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] transition">Privacy</button>
+        </nav>
+
+        <!-- Right CTA & Mobile Menu Toggle -->
+        <div class="flex items-center gap-3">
+          <button onclick="navigateTo('converter')" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+            <span>Start Converting</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+          <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg border border-[#E5E7EB] text-[#111827] hover:bg-[#F8FAFC]" aria-label="Toggle Menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-menu" class="hidden lg:hidden border-t border-[#E5E7EB] bg-white px-4 pt-3 pb-5 space-y-1">
+      <button onclick="navigateTo('home'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC]">Home</button>
+      <button onclick="navigateToSection('features'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">Features</button>
+      <button onclick="navigateToSection('how-it-works'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">How It Works</button>
+      <button onclick="navigateTo('converter'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">Converter Workspace</button>
+      <button onclick="navigateTo('history'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">Conversion History</button>
+      <button onclick="navigateTo('settings'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">Settings</button>
+      <button onclick="navigateTo('about'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">About</button>
+      <button onclick="navigateTo('privacy'); toggleMobileMenu(false)" class="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC]">Privacy Policy</button>
+      <div class="pt-2">
+        <button onclick="navigateTo('converter'); toggleMobileMenu(false)" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#2563EB] text-white text-sm font-semibold">
+          <span>Start Converting</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <main class="flex-1">
+
+    <!-- ==================== PAGE 1: LANDING PAGE (HOME) ==================== -->
+    <section id="page-home" class="page-view">
+      <!-- Hero Section -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-16 lg:pt-20 lg:pb-24">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <!-- Left Copy -->
+          <div class="lg:col-span-6 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8FAFC] border border-[#E5E7EB] text-xs font-medium text-[#111827]">
+              <span class="w-2 h-2 rounded-full bg-[#16A34A]"></span>
+              <span>100% Local Browser OCR • Zero AI APIs • Zero Uploads</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#111827] leading-[1.12]">
+              Turn Any Image Into an Excel Spreadsheet.
+            </h1>
+
+            <p class="text-lg text-[#64748B] leading-relaxed max-w-xl">
+              Extract tables and information from images. Edit your extracted data and download professional Excel spreadsheets in seconds.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3.5 pt-2">
+              <button onclick="navigateTo('converter')" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer">
+                <span>Start Converting</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+              <button onclick="navigateToSection('how-it-works')" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-[#F8FAFC] text-[#111827] border border-[#E5E7EB] text-sm font-semibold transition cursor-pointer">
+                <span>Learn More</span>
+              </button>
+            </div>
+
+            <!-- Trust Metrics Bar -->
+            <div class="pt-4 grid grid-cols-3 gap-4 border-t border-[#E5E7EB] max-w-md">
+              <div>
+                <div class="text-sm font-bold text-[#111827]">0 KB Sent</div>
+                <div class="text-xs text-[#64748B]">Pure on-device WASM</div>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-[#111827]">Native .XLSX</div>
+                <div class="text-xs text-[#64748B]">Multi-sheet workbooks</div>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-[#111827]">Free Forever</div>
+                <div class="text-xs text-[#64748B]">No keys or accounts</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Visual Demonstration Card -->
+          <div class="lg:col-span-6">
+            <div class="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4 sm:p-6 shadow-sm">
+              <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#E5E7EB]">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span class="ml-2 text-xs font-medium text-[#64748B]">Coordinate Table Reconstruction Preview</span>
+                </div>
+                <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-[#2563EB] border border-blue-100">Tesseract + SheetJS</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-11 gap-4 items-center">
+                <!-- Left Mock Scanned Document with Bounding Boxes -->
+                <div class="sm:col-span-5 bg-white rounded-xl border border-[#E5E7EB] p-3.5 shadow-2xs">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Source Image</span>
+                    <span class="text-[10px] font-mono text-[#2563EB] bg-blue-50 px-1.5 py-0.5 rounded">bbox detected</span>
+                  </div>
+                  <div class="space-y-2 text-[11px] font-mono">
+                    <div class="grid grid-cols-3 gap-1 pb-1.5 border-b border-dashed border-blue-300">
+                      <span class="px-1 py-0.5 border border-blue-400 bg-blue-50/50 rounded-xs font-semibold text-[#111827]">ITEM</span>
+                      <span class="px-1 py-0.5 border border-blue-400 bg-blue-50/50 rounded-xs font-semibold text-[#111827]">QTY</span>
+                      <span class="px-1 py-0.5 border border-blue-400 bg-blue-50/50 rounded-xs font-semibold text-[#111827]">TOTAL</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1">
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">Monitor</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">2</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">$580</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1">
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">Keyboard</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">5</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">$425</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1">
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">Dock Hub</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">3</span>
+                      <span class="px-1 py-0.5 border border-emerald-400 bg-emerald-50/40 rounded-xs text-[#111827]">$270</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Middle Arrow -->
+                <div class="sm:col-span-1 flex justify-center">
+                  <div class="w-8 h-8 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center text-[#2563EB] shadow-2xs rotate-90 sm:rotate-0">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                  </div>
+                </div>
+
+                <!-- Right Extracted Editable Excel Grid -->
+                <div class="sm:col-span-5 bg-white rounded-xl border border-[#E5E7EB] overflow-hidden shadow-2xs">
+                  <div class="px-3 py-2 bg-[#F8FAFC] border-b border-[#E5E7EB] flex items-center justify-between">
+                    <span class="text-[11px] font-semibold text-[#16A34A] flex items-center gap-1">
+                      <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                      ceet-export.xlsx
+                    </span>
+                    <span class="text-[10px] text-[#64748B]">Editable</span>
+                  </div>
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr class="bg-slate-50 border-b border-[#E5E7EB] text-[#64748B] font-semibold">
+                        <th class="py-1.5 px-2.5 border-r border-[#E5E7EB]">ITEM</th>
+                        <th class="py-1.5 px-2 border-r border-[#E5E7EB]">QTY</th>
+                        <th class="py-1.5 px-2.5">TOTAL</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#E5E7EB] text-[#111827]">
+                      <tr>
+                        <td class="py-1.5 px-2.5 border-r border-[#E5E7EB]">Monitor</td>
+                        <td class="py-1.5 px-2 border-r border-[#E5E7EB] font-mono">2</td>
+                        <td class="py-1.5 px-2.5 font-mono">580</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 px-2.5 border-r border-[#E5E7EB]">Keyboard</td>
+                        <td class="py-1.5 px-2 border-r border-[#E5E7EB] font-mono">5</td>
+                        <td class="py-1.5 px-2.5 font-mono">425</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 px-2.5 border-r border-[#E5E7EB]">Dock Hub</td>
+                        <td class="py-1.5 px-2 border-r border-[#E5E7EB] font-mono">3</td>
+                        <td class="py-1.5 px-2.5 font-mono">270</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
+                <span>Want to try it right away with sample data?</span>
+                <button onclick="launchWithSample()" class="font-semibold text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer">
+                  <span>Load Sample in Workspace</span>
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Section -->
+      <div id="section-features" class="border-t border-[#E5E7EB] bg-[#F8FAFC] py-16 lg:py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-2xl mb-12">
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">Deterministic Table Extraction, Built for Accuracy</h2>
+            <p class="mt-3 text-[#64748B]">No generative AI guesswork or hallucinated numbers. CEET measures real bounding-box geometry directly inside your browser.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Card 1 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-4">
+                <i data-lucide="cpu" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Free OCR Technology</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Powered by Tesseract.js WebAssembly running natively in your browser with multi-language support and zero API fees.</p>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center mb-4">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Image to Excel</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Generates genuine Microsoft Excel (.xlsx) and CSV files with auto-fitted column widths and preserved numeric types.</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-4">
+                <i data-lucide="table-2" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Smart Table Detection</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Reconstructs rows, column intervals, headers, and empty cells using X/Y word bounding-box coordinate clustering.</p>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-4">
+                <i data-lucide="edit-3" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Editable Spreadsheet</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Inline cell and header editing, row/column insertion, sorting, search highlighting, undo/redo history, and clipboard paste.</p>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center mb-4">
+                <i data-lucide="layers" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Multiple Image Support</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Upload batch documents and convert each image into its own dedicated worksheet tab—or merge tables manually.</p>
+            </div>
+
+            <!-- Card 6 -->
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-2xs hover:shadow-sm transition">
+              <div class="w-10 h-10 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center mb-4">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+              </div>
+              <h3 class="text-base font-semibold text-[#111827]">Private Browser Processing</h3>
+              <p class="mt-2 text-sm text-[#64748B] leading-relaxed">Sensitive invoices, academic records, and financial sheets never leave your device. History stays in local IndexedDB.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works Section -->
+      <div id="section-how-it-works" class="py-16 lg:py-20 bg-white border-t border-[#E5E7EB]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-2xl mb-12">
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#111827]">How CEET Works</h2>
+            <p class="mt-3 text-[#64748B]">Four transparent, verifiable steps from raw image file to clean Excel workbook.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="rounded-xl border border-[#E5E7EB] p-6 bg-white">
+              <div class="w-8 h-8 rounded-lg bg-[#2563EB] text-white text-sm font-bold flex items-center justify-center mb-4">1</div>
+              <h3 class="text-base font-semibold text-[#111827]">Upload your image.</h3>
+              <p class="mt-2 text-sm text-[#64748B]">Drag and drop JPG, PNG, or WEBP scans, screenshots, or photos. Optionally crop, rotate, or enhance contrast.</p>
+            </div>
+
+            <div class="rounded-xl border border-[#E5E7EB] p-6 bg-white">
+              <div class="w-8 h-8 rounded-lg bg-[#2563EB] text-white text-sm font-bold flex items-center justify-center mb-4">2</div>
+              <h3 class="text-base font-semibold text-[#111827]">Extract text using OCR.</h3>
+              <p class="mt-2 text-sm text-[#64748B]">Tesseract.js locally recognizes printed text, numbers, and punctuation while recording exact word coordinates.</p>
+            </div>
+
+            <div class="rounded-xl border border-[#E5E7EB] p-6 bg-white">
+              <div class="w-8 h-8 rounded-lg bg-[#2563EB] text-white text-sm font-bold flex items-center justify-center mb-4">3</div>
+              <h3 class="text-base font-semibold text-[#111827]">Organize the data into a spreadsheet.</h3>
+              <p class="mt-2 text-sm text-[#64748B]">CEET's geometric clustering aligns words into structured rows and columns, preserving empty cells and headers.</p>
+            </div>
+
+            <div class="rounded-xl border border-[#E5E7EB] p-6 bg-white">
+              <div class="w-8 h-8 rounded-lg bg-[#16A34A] text-white text-sm font-bold flex items-center justify-center mb-4">4</div>
+              <h3 class="text-base font-semibold text-[#111827]">Edit and download Excel.</h3>
+              <p class="mt-2 text-sm text-[#64748B]">Review and refine cells in the interactive grid, then export a formatted <code class="text-xs bg-[#F8FAFC] px-1 py-0.5 rounded border border-[#E5E7EB]">.xlsx</code> workbook.</p>
+            </div>
+          </div>
+
+          <div class="mt-12 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div>
+              <h3 class="text-lg font-bold text-[#111827]">Ready to convert your first table?</h3>
+              <p class="text-sm text-[#64748B] mt-1">No account required. Works offline once OCR language data is cached.</p>
+            </div>
+            <button onclick="navigateTo('converter')" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition cursor-pointer shrink-0">
+              <span>Open Converter Workspace</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 2: CONVERTER WORKSPACE ==================== -->
+    <section id="page-converter" class="page-view hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <!-- Workspace Top Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-2xl font-bold tracking-tight text-[#111827]">Converter Workspace</h1>
+              <span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#16A34A] border border-emerald-200">Local Browser Engine</span>
+            </div>
+            <p class="text-sm text-[#64748B] mt-0.5">Upload images, enhance clarity, extract coordinates via Tesseract.js, and edit spreadsheets.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="loadSampleDocument()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-xs font-semibold text-[#111827] transition cursor-pointer">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#2563EB]"></i>
+              <span>Load Sample Table Image</span>
+            </button>
+            <button id="btn-extract-active" onclick="runOCROnActiveImage()" disabled class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 disabled:opacity-45 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-2xs transition cursor-pointer">
+              <i data-lucide="scan-text" class="w-3.5 h-3.5"></i>
+              <span>Extract Current Image</span>
+            </button>
+            <button id="btn-extract-all" onclick="runOCROnAllImages()" disabled class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#111827] hover:bg-slate-800 disabled:opacity-45 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-2xs transition cursor-pointer">
+              <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+              <span>Extract All (<span id="queue-count-label">0</span>)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 1 & 2: Upload Queue + Image Studio (Canvas Preprocessing) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left Column (4 cols): Upload Zone & Image Queue -->
+          <div class="lg:col-span-4 space-y-4">
+            <div class="bg-white rounded-xl border border-[#E5E7EB] p-4 shadow-2xs">
+              <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-[#111827] flex items-center gap-2">
+                  <i data-lucide="upload-cloud" class="w-4 h-4 text-[#2563EB]"></i>
+                  <span>1. Upload Images</span>
+                </h2>
+                <button id="btn-clear-images" onclick="clearAllImages()" class="hidden text-xs font-medium text-[#DC2626] hover:underline cursor-pointer">Clear all</button>
+              </div>
+
+              <!-- Drag and Drop Zone -->
+              <div id="drop-zone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#E5E7EB] hover:border-[#2563EB] bg-[#F8FAFC] hover:bg-blue-50/30 rounded-xl p-6 text-center cursor-pointer transition">
+                <input id="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple class="hidden" onchange="handleFileSelect(event)" />
+                <div class="w-10 h-10 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center mx-auto mb-2.5 text-[#2563EB] shadow-2xs">
+                  <i data-lucide="image-plus" class="w-5 h-5"></i>
+                </div>
+                <p class="text-sm font-semibold text-[#111827]">Drop images here or browse</p>
+                <p class="text-xs text-[#64748B] mt-1">Supports JPG, JPEG, PNG, WEBP (Max 25MB each)</p>
+              </div>
+
+              <!-- Uploaded Files Queue List -->
+              <div id="image-queue-list" class="mt-4 space-y-2 max-h-64 overflow-y-auto">
+                <div class="text-xs text-center text-[#64748B] py-4 border border-[#E5E7EB] rounded-lg bg-[#F8FAFC]">
+                  No images uploaded yet. Upload files or click <strong>Load Sample Table Image</strong>.
+                </div>
+              </div>
+            </div>
+
+            <!-- Real-time 5-Stage OCR Progress Status Card -->
+            <div id="ocr-status-card" class="bg-white rounded-xl border border-[#E5E7EB] p-4 shadow-2xs">
+              <div class="flex items-center justify-between mb-2.5">
+                <h2 class="text-sm font-semibold text-[#111827] flex items-center gap-2">
+                  <i data-lucide="activity" class="w-4 h-4 text-[#2563EB]"></i>
+                  <span>OCR Engine Status</span>
+                </h2>
+                <span id="ocr-percent-badge" class="text-xs font-mono font-semibold text-[#64748B]">Idle</span>
+              </div>
+
+              <!-- Real Progress Bar -->
+              <div class="w-full h-2 bg-[#F8FAFC] border border-[#E5E7EB] rounded-full overflow-hidden mb-3">
+                <div id="ocr-progress-bar" class="h-full bg-[#2563EB] transition-all duration-150" style="width: 0%"></div>
+              </div>
+
+              <!-- 5 Explicit Processing Stages -->
+              <ol class="space-y-1.5 text-xs" id="ocr-stages-list">
+                <li data-stage="1" class="flex items-center gap-2 text-[#64748B]">
+                  <span class="stage-dot w-2 h-2 rounded-full bg-slate-300"></span>
+                  <span>1. Loading OCR engine</span>
+                </li>
+                <li data-stage="2" class="flex items-center gap-2 text-[#64748B]">
+                  <span class="stage-dot w-2 h-2 rounded-full bg-slate-300"></span>
+                  <span>2. Preparing image</span>
+                </li>
+                <li data-stage="3" class="flex items-center gap-2 text-[#64748B]">
+                  <span class="stage-dot w-2 h-2 rounded-full bg-slate-300"></span>
+                  <span>3. Recognizing text</span>
+                </li>
+                <li data-stage="4" class="flex items-center gap-2 text-[#64748B]">
+                  <span class="stage-dot w-2 h-2 rounded-full bg-slate-300"></span>
+                  <span>4. Detecting table structure</span>
+                </li>
+                <li data-stage="5" class="flex items-center gap-2 text-[#64748B]">
+                  <span class="stage-dot w-2 h-2 rounded-full bg-slate-300"></span>
+                  <span>5. Preparing spreadsheet</span>
+                </li>
+              </ol>
+
+              <!-- Confidence & Metrics Result Strip -->
+              <div id="ocr-metrics-box" class="hidden mt-3 pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs">
+                <div>
+                  <span class="text-[#64748B]">Confidence:</span>
+                  <span id="ocr-confidence-val" class="font-bold text-[#16A34A] ml-1">--%</span>
+                </div>
+                <div>
+                  <span class="text-[#64748B]">Words:</span>
+                  <span id="ocr-wordcount-val" class="font-bold text-[#111827] ml-1">0</span>
+                </div>
+                <button onclick="toggleBBoxOverlay()" id="btn-toggle-bbox" class="text-[#2563EB] font-semibold hover:underline cursor-pointer">Show Boxes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (8 cols): Canvas Image Preview & Preprocessing Controls -->
+          <div class="lg:col-span-8 bg-white rounded-xl border border-[#E5E7EB] p-4 shadow-2xs flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-[#E5E7EB]">
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-semibold text-[#111827] flex items-center gap-2">
+                  <i data-lucide="sliders" class="w-4 h-4 text-[#2563EB]"></i>
+                  <span>2. Image Preview & Canvas Enhancement</span>
+                </h2>
+                <span id="active-image-name" class="text-xs text-[#64748B] truncate max-w-[180px]"></span>
+              </div>
+
+              <!-- Original vs Enhanced Toggle -->
+              <div class="inline-flex rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-0.5 text-xs">
+                <button id="btn-view-enhanced" onclick="setCompareOriginal(false)" class="px-2.5 py-1 rounded-md font-semibold bg-white text-[#111827] shadow-2xs transition cursor-pointer">Enhanced</button>
+                <button id="btn-view-original" onclick="setCompareOriginal(true)" class="px-2.5 py-1 rounded-md font-medium text-[#64748B] hover:text-[#111827] transition cursor-pointer">Original</button>
+              </div>
+            </div>
+
+            <!-- Image Adjustment Toolbar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pb-3 mb-3 border-b border-[#E5E7EB] text-xs">
+              <!-- Rotate -->
+              <button onclick="rotateActiveImage()" class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#111827] font-medium cursor-pointer" title="Rotate 90°">
+                <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>Rotate (<span id="ctrl-rotate-val">0</span>°)</span>
+              </button>
+
+              <!-- Grayscale -->
+              <button id="btn-toggle-gray" onclick="toggleFilter('grayscale')" class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#111827] font-medium cursor-pointer">
+                <i data-lucide="contrast" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>Grayscale</span>
+              </button>
+
+              <!-- Sharpen -->
+              <button id="btn-toggle-sharpen" onclick="toggleFilter('sharpen')" class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#111827] font-medium cursor-pointer">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>Sharpen</span>
+              </button>
+
+              <!-- Resize Scale -->
+              <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]">
+                <span class="text-[#64748B]">Scale</span>
+                <select id="ctrl-scale" onchange="updateFilter('scale', parseFloat(this.value))" class="bg-transparent font-semibold text-[#111827] focus:outline-none cursor-pointer">
+                  <option value="1">1.0x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2.0x</option>
+                </select>
+              </div>
+
+              <!-- Contrast Slider -->
+              <div class="flex flex-col justify-center px-2.5 py-1 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]">
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-[#64748B]">Contrast</span>
+                  <span id="ctrl-contrast-val" class="font-semibold">100%</span>
+                </div>
+                <input id="ctrl-contrast" type="range" min="50" max="200" value="100" oninput="updateFilter('contrast', parseInt(this.value))" class="w-full h-1 bg-slate-200 rounded-lg accent-[#2563EB] cursor-pointer" />
+              </div>
+
+              <!-- Brightness Slider -->
+              <div class="flex flex-col justify-center px-2.5 py-1 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]">
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-[#64748B]">Bright</span>
+                  <span id="ctrl-brightness-val" class="font-semibold">100%</span>
+                </div>
+                <input id="ctrl-brightness" type="range" min="50" max="200" value="100" oninput="updateFilter('brightness', parseInt(this.value))" class="w-full h-1 bg-slate-200 rounded-lg accent-[#2563EB] cursor-pointer" />
+              </div>
+
+              <!-- Crop Tool & Reset -->
+              <div class="flex items-center gap-1">
+                <button id="btn-crop-mode" onclick="toggleCropMode()" class="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#111827] font-medium cursor-pointer" title="Drag on image to crop">
+                  <i data-lucide="crop" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                  <span>Crop</span>
+                </button>
+                <button onclick="resetImageFilters()" class="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#64748B] hover:text-[#111827] cursor-pointer" title="Reset Adjustments">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Crop Action Bar (Visible only during Crop mode) -->
+            <div id="crop-action-bar" class="hidden mb-3 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between text-xs">
+              <span class="text-[#111827] font-medium">Drag a rectangle over the table area on the canvas below to crop.</span>
+              <div class="flex items-center gap-2">
+                <button onclick="applyCropSelection()" class="px-3 py-1 rounded-md bg-[#2563EB] text-white font-semibold cursor-pointer">Apply Crop</button>
+                <button onclick="toggleCropMode(false)" class="px-2.5 py-1 rounded-md bg-white border border-[#E5E7EB] text-[#111827] font-medium cursor-pointer">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Interactive HTML Canvas Container -->
+            <div id="canvas-wrapper" class="relative flex-1 min-h-[300px] max-h-[430px] bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-center overflow-auto p-3 select-none">
+              <div id="canvas-empty-state" class="text-center p-6">
+                <i data-lucide="file-image" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                <p class="text-sm font-medium text-[#64748B]">Select or upload an image to inspect & preprocess</p>
+              </div>
+              <canvas id="preview-canvas" class="hidden max-w-full h-auto rounded-lg shadow-2xs bg-white"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Table Structure Reconstructor & Interactive Spreadsheet Editor -->
+        <div class="bg-white rounded-xl border border-[#E5E7EB] shadow-2xs overflow-hidden">
+          <!-- Table Structure Tuning Bar -->
+          <div class="px-4 py-3 bg-[#F8FAFC] border-b border-[#E5E7EB] flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="table" class="w-4 h-4 text-[#2563EB]"></i>
+              <h2 class="text-sm font-semibold text-[#111827]">3. Smart Table Detection & Spreadsheet Editor</h2>
+              <span id="sheet-dimensions-badge" class="text-xs font-mono px-2 py-0.5 rounded bg-white border border-[#E5E7EB] text-[#64748B]">0 rows × 0 cols</span>
+            </div>
+
+            <!-- Manual Table Re-detection Controls -->
+            <div class="flex flex-wrap items-center gap-3 text-xs">
+              <label class="flex items-center gap-1.5 text-[#111827] font-medium cursor-pointer">
+                <input id="chk-first-row-header" type="checkbox" checked onchange="reprocessActiveTableStructure()" class="rounded accent-[#2563EB]" />
+                <span>First row as headers</span>
+              </label>
+
+              <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-[#E5E7EB]">
+                <span class="text-[#64748B]">Col Gap Threshold:</span>
+                <input id="col-gap-slider" type="range" min="10" max="120" value="32" oninput="document.getElementById('col-gap-val').textContent = this.value + 'px'" onchange="reprocessActiveTableStructure()" class="w-20 h-1 accent-[#2563EB] cursor-pointer" />
+                <span id="col-gap-val" class="font-mono font-semibold text-[#111827] w-9">32px</span>
+              </div>
+
+              <button onclick="reprocessActiveTableStructure(true)" class="px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#111827] font-medium cursor-pointer" title="Fallback: place each line into a single column">
+                Line-by-Line Mode
+              </button>
+
+              <button onclick="toggleRawTextDrawer()" class="px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#2563EB] font-medium cursor-pointer">
+                Raw OCR Text
+              </button>
+            </div>
+          </div>
+
+          <!-- Collapsible Raw OCR Text Drawer -->
+          <div id="raw-text-drawer" class="hidden px-4 py-3 bg-slate-50 border-b border-[#E5E7EB]">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-semibold text-[#111827]">Raw Recognized Text (Unstructured OCR Output)</span>
+              <button onclick="toggleRawTextDrawer(false)" class="text-xs text-[#64748B] hover:text-[#111827]">Close</button>
+            </div>
+            <textarea id="raw-ocr-textarea" rows="4" readonly class="w-full text-xs font-mono p-2.5 rounded-lg border border-[#E5E7EB] bg-white text-[#111827] focus:outline-none" placeholder="Run OCR on an image to inspect raw recognized text..."></textarea>
+          </div>
+
+          <!-- Spreadsheet Editing Toolbar -->
+          <div class="px-4 py-2.5 bg-white border-b border-[#E5E7EB] flex flex-wrap items-center justify-between gap-2">
+            <!-- Left Row/Col/History Actions -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button onclick="undoSheet()" id="btn-undo" disabled class="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-40 text-[#111827] cursor-pointer" title="Undo (Ctrl+Z)">
+                <i data-lucide="undo-2" class="w-4 h-4"></i>
+              </button>
+              <button onclick="redoSheet()" id="btn-redo" disabled class="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] disabled:opacity-40 text-[#111827] cursor-pointer" title="Redo (Ctrl+Y)">
+                <i data-lucide="redo-2" class="w-4 h-4"></i>
+              </button>
+
+              <span class="h-4 w-px bg-[#E5E7EB] mx-1"></span>
+
+              <button onclick="addSheetRow()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-[#2563EB]"></i>
+                <span>Row</span>
+              </button>
+              <button onclick="deleteSelectedRow()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-[#DC2626]"></i>
+                <span>Del Row</span>
+              </button>
+              <button onclick="addSheetColumn()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-[#2563EB]"></i>
+                <span>Col</span>
+              </button>
+              <button onclick="deleteSelectedColumn()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer">
+                <i data-lucide="columns" class="w-3.5 h-3.5 text-[#DC2626]"></i>
+                <span>Del Col</span>
+              </button>
+
+              <span class="h-4 w-px bg-[#E5E7EB] mx-1"></span>
+
+              <button onclick="sortActiveColumn()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer" title="Sort Selected Column">
+                <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>Sort Col</span>
+              </button>
+
+              <button onclick="copySheetToClipboard()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-medium text-[#111827] cursor-pointer" title="Copy Table as TSV">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <!-- Right Search & Export Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                <input id="sheet-search-input" type="text" oninput="renderSpreadsheet()" placeholder="Search cells..." class="pl-8 pr-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs text-[#111827] focus:outline-none focus:border-[#2563EB] w-36 sm:w-44" />
+              </div>
+
+              <button onclick="exportWorkbookCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-xs font-semibold text-[#111827] cursor-pointer">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#64748B]"></i>
+                <span>CSV</span>
+              </button>
+
+              <button onclick="exportWorkbookXLSX()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#16A34A] hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs cursor-pointer">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Download Excel (.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Scrollable Grid Container -->
+          <div class="overflow-auto max-h-[420px] bg-white relative" id="spreadsheet-scroll-container">
+            <table id="spreadsheet-table" class="w-full border-collapse text-xs">
+              <!-- Dynamically rendered by renderSpreadsheet() -->
+            </table>
+          </div>
+
+          <!-- Bottom Worksheet Tabs Bar -->
+          <div class="px-3 py-2 bg-[#F8FAFC] border-t border-[#E5E7EB] flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 overflow-x-auto" id="worksheet-tabs-container">
+              <!-- Dynamic worksheet tabs -->
+            </div>
+
+            <div class="flex items-center gap-2 text-xs">
+              <button onclick="addBlankWorksheet()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#111827] font-medium cursor-pointer">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-[#2563EB]"></i>
+                <span>New Sheet</span>
+              </button>
+              <button onclick="renameActiveWorksheet()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#111827] font-medium cursor-pointer">
+                <i data-lucide="pencil" class="w-3 h-3 text-[#64748B]"></i>
+                <span>Rename</span>
+              </button>
+              <button onclick="combineAllWorksheets()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#111827] font-medium cursor-pointer" title="Combine all worksheets into one master sheet">
+                <i data-lucide="merge" class="w-3.5 h-3.5 text-[#2563EB]"></i>
+                <span>Combine Sheets</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 3: CONVERSION HISTORY ==================== -->
+    <section id="page-history" class="page-view hidden">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight text-[#111827]">Conversion History</h1>
+            <p class="text-sm text-[#64748B] mt-1">Reopen, rename, or re-export previous spreadsheet conversions.</p>
+          </div>
+          <button onclick="clearAllHistory()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold text-[#DC2626] cursor-pointer self-start">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Clear All History</span>
+          </button>
+        </div>
+
+        <!-- Local Storage Notice -->
+        <div class="rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4 flex items-start gap-3 text-xs text-[#64748B]">
+          <i data-lucide="hard-drive" class="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5"></i>
+          <div>
+            <span class="font-semibold text-[#111827]">Stored Locally in Your Browser (IndexedDB):</span>
+            Your conversion history is saved privately on this device and is never uploaded to any cloud server. Clearing browser site data will remove these records, and history does not synchronize across devices.
+          </div>
+        </div>
+
+        <!-- History Items List -->
+        <div id="history-list-container" class="space-y-3">
+          <!-- Populated dynamically from IndexedDB -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 4: SETTINGS ==================== -->
+    <section id="page-settings" class="page-view hidden">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div class="pb-4 border-b border-[#E5E7EB]">
+          <h1 class="text-2xl font-bold tracking-tight text-[#111827]">Settings</h1>
+          <p class="text-sm text-[#64748B] mt-1">Configure default OCR language, image preprocessing presets, and local storage.</p>
+        </div>
+
+        <!-- OCR & Export Preferences -->
+        <div class="bg-white rounded-xl border border-[#E5E7EB] divide-y divide-[#E5E7EB] shadow-2xs">
+          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-[#111827]">Default Export Format</h3>
+              <p class="text-xs text-[#64748B] mt-0.5">Preferred file format when exporting from Conversion History or quick export.</p>
+            </div>
+            <select id="setting-export-format" onchange="saveSettingsFromUI()" class="px-3 py-2 rounded-lg border border-[#E5E7EB] bg-white text-sm font-medium text-[#111827] focus:outline-none focus:border-[#2563EB]">
+              <option value="xlsx">Microsoft Excel (.xlsx)</option>
+              <option value="csv">Comma-Separated Values (.csv)</option>
+            </select>
+          </div>
+
+          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-[#111827]">OCR Recognition Language</h3>
+              <p class="text-xs text-[#64748B] mt-0.5">Tesseract.js traineddata model downloaded locally on first use.</p>
+            </div>
+            <select id="setting-ocr-lang" onchange="saveSettingsFromUI()" class="px-3 py-2 rounded-lg border border-[#E5E7EB] bg-white text-sm font-medium text-[#111827] focus:outline-none focus:border-[#2563EB]">
+              <option value="eng">English (eng)</option>
+              <option value="fra">French (fra)</option>
+              <option value="deu">German (deu)</option>
+              <option value="spa">Spanish (spa)</option>
+              <option value="ita">Italian (ita)</option>
+              <option value="por">Portuguese (por)</option>
+            </select>
+          </div>
+
+          <div class="p-5 flex items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-[#111827]">Auto-Grayscale Preprocessing</h3>
+              <p class="text-xs text-[#64748B] mt-0.5">Automatically convert newly uploaded images to high-contrast grayscale.</p>
+            </div>
+            <input id="setting-auto-gray" type="checkbox" onchange="saveSettingsFromUI()" class="w-4 h-4 rounded accent-[#2563EB] cursor-pointer" />
+          </div>
+
+          <div class="p-5 flex items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-[#111827]">Auto-Upscale Small Text (1.5x)</h3>
+              <p class="text-xs text-[#64748B] mt-0.5">Improves Tesseract character accuracy on low-resolution screenshots.</p>
+            </div>
+            <input id="setting-auto-upscale" type="checkbox" onchange="saveSettingsFromUI()" class="w-4 h-4 rounded accent-[#2563EB] cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- Storage & Privacy Management -->
+        <div class="bg-white rounded-xl border border-[#E5E7EB] p-5 space-y-4 shadow-2xs">
+          <div>
+            <h3 class="text-sm font-semibold text-[#111827]">Local Data & Cache Management</h3>
+            <p class="text-xs text-[#64748B] mt-0.5">Manage IndexedDB conversion records and active workspace memory.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button onclick="clearAllHistory()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-xs font-semibold text-[#111827] cursor-pointer">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-[#DC2626]"></i>
+              <span>Clear Conversion History</span>
+            </button>
+            <button onclick="clearTemporaryFilesAndReset()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold text-[#DC2626] cursor-pointer">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Clear Temporary Images & Reset Settings</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 5: PRIVACY POLICY ==================== -->
+    <section id="page-privacy" class="page-view hidden">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div class="pb-4 border-b border-[#E5E7EB]">
+          <h1 class="text-2xl font-bold tracking-tight text-[#111827]">Privacy Policy</h1>
+          <p class="text-sm text-[#64748B] mt-1">Local-first architecture designed for confidential documents.</p>
+        </div>
+
+        <!-- Prominent Required Privacy Statement -->
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 flex items-start gap-3.5">
+          <div class="w-9 h-9 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-[#111827]">Zero-Server Guarantee</h2>
+            <p class="text-sm text-[#111827] mt-1 leading-relaxed">
+              "Your images are processed directly in your browser. CEET does not require an external AI API or cloud OCR service."
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 space-y-5 text-sm text-[#64748B] leading-relaxed shadow-2xs">
+          <div>
+            <h3 class="text-base font-semibold text-[#111827] mb-1.5">1. Local WebAssembly OCR Processing</h3>
+            <p>All optical character recognition is performed inside your browser tab using Tesseract.js compiled to WebAssembly. Your uploaded PNG, JPG, or WEBP images are read into local HTML5 Canvas memory and are never transmitted over the network to any processing server.</p>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-[#111827] mb-1.5">2. No External AI APIs or Credentials</h3>
+            <p>CEET does not connect to OpenAI, Gemini, Claude, or third-party cloud OCR endpoints. No API keys, user accounts, or tracking cookies are required to use any feature of the platform.</p>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-[#111827] mb-1.5">3. Local IndexedDB Storage</h3>
+            <p>When you convert an image, the extracted spreadsheet rows and metadata are stored exclusively in your browser's local IndexedDB database (<code class="text-xs bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E5E7EB]">ceet_db</code>) so you can reopen past conversions. You may delete individual records or wipe all local history at any time from the History or Settings pages.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 6: ABOUT ==================== -->
+    <section id="page-about" class="page-view hidden">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div class="pb-4 border-b border-[#E5E7EB]">
+          <h1 class="text-2xl font-bold tracking-tight text-[#111827]">About CEET</h1>
+          <p class="text-sm text-[#64748B] mt-1">Deterministic, AI-free document-to-spreadsheet conversion powered by CETA.</p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 space-y-4 text-sm text-[#64748B] leading-relaxed shadow-2xs">
+          <p class="text-[#111827] font-medium text-base">
+            CEET was built to solve a simple problem: turning printed tables, receipts, attendance sheets, and exam marks into clean Excel workbooks without uploading private files to cloud AI services.
+          </p>
+          <p>
+            Unlike cloud LLM converters that can hallucinate digits or impose strict page quotas, CEET combines three proven open technologies directly inside your browser:
+          </p>
+          <ul class="space-y-2.5 pt-1">
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5"></i>
+              <span><strong class="text-[#111827]">HTML5 Canvas Preprocessing:</strong> Real-time grayscale, contrast/brightness normalization, 3×3 sharpening convolution, rotation, and region cropping.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5"></i>
+              <span><strong class="text-[#111827]">Tesseract.js + Coordinate Clustering:</strong> Word-level bounding boxes (<code class="text-xs">x0, y0, x1, y1</code>) grouped into rows and column intervals to reconstruct tabular layouts faithfully.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5"></i>
+              <span><strong class="text-[#111827]">SheetJS (.xlsx) Generation:</strong> Standards-compliant Excel workbook creation supporting multiple tabs, numeric type preservation, and auto-sized columns.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== GLOBAL FOOTER (MATCHING IMAGE 2 & IMAGE 3) ==================== -->
+  <footer class="border-t border-[#E5E7EB] bg-white mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center justify-center text-center">
+      <!-- Quick Sub-links -->
+      <div class="flex flex-wrap items-center justify-center gap-5 text-xs text-[#64748B] mb-6">
+        <button onclick="navigateTo('home')" class="hover:text-[#111827] transition cursor-pointer">Home</button>
+        <button onclick="navigateTo('converter')" class="hover:text-[#111827] transition cursor-pointer">Converter</button>
+        <button onclick="navigateTo('history')" class="hover:text-[#111827] transition cursor-pointer">History</button>
+        <button onclick="navigateTo('settings')" class="hover:text-[#111827] transition cursor-pointer">Settings</button>
+        <button onclick="navigateTo('about')" class="hover:text-[#111827] transition cursor-pointer">About</button>
+        <button onclick="navigateTo('privacy')" class="hover:text-[#111827] transition cursor-pointer">Privacy Policy</button>
+      </div>
+
+      <!-- 2nd Logo (CETA Vibrant Blue-to-Cyan Wave 'C' Mark) centered directly above "Powered by CETA" -->
+      <div class="flex flex-col items-center justify-center select-none">
+        <svg class="w-9 h-9 mb-2" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CETA Logo">
+          <defs>
+            <linearGradient id="cetaUpperGrad" x1="25" y1="18" x2="96" y2="52" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0038E0"/>
+              <stop offset="55%" stop-color="#0084FF"/>
+              <stop offset="100%" stop-color="#00E5FF"/>
+            </linearGradient>
+            <linearGradient id="cetaLowerGrad" x1="25" y1="62" x2="96" y2="98" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0033CC"/>
+              <stop offset="55%" stop-color="#007BFF"/>
+              <stop offset="100%" stop-color="#00F0FF"/>
+            </linearGradient>
+          </defs>
+          <!-- Upper swept shark-fin / wave 'C' arc -->
+          <path d="M35 22C54 14 82 22 96 42C102 50 97 58 88 54C75 48 56 44 42 54C30 62 28 80 41 94C23 84 18 58 31 38C36 31 37 26 35 22Z" fill="url(#cetaUpperGrad)"/>
+          <!-- Inner cyan highlight ribbon -->
+          <path d="M31 44C44 31 68 30 88 41C73 36 53 37 40 48C31 56 28 69 33 83C24 70 23 54 31 44Z" fill="#00E5FF" fill-opacity="0.85"/>
+          <!-- Lower crescent wave arc -->
+          <path d="M44 55C38 69 45 84 62 86C75 88 84 78 93 80C100 81 101 89 94 97C79 112 52 112 38 96C29 85 30 66 44 55Z" fill="url(#cetaLowerGrad)"/>
+          <!-- Lower deep fold accent -->
+          <path d="M44 82C54 95 72 98 88 89C77 101 58 103 44 92C38 87 38 78 44 82Z" fill="#0029A3" fill-opacity="0.65"/>
+        </svg>
+        <div class="text-sm tracking-tight">
+          <span class="text-[#64748B] font-normal">Powered by </span>
+          <span class="text-[#111827] font-bold">CETA</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== APPLICATION LOGIC (SERVICES + STATE + UI) ==================== -->
+  <script>
+    /*************************************************************************
+     * 1. GLOBAL APPLICATION STATE & DEFAULT SETTINGS
+     *************************************************************************/
+    const APP_STATE = {
+      currentPage: 'home',
+      images: [], // Array of { id, name, size, type, originalDataUrl, croppedDataUrl, filters, ocrResult }
+      activeImageId: null,
+      compareOriginal: false,
+      showBBoxOverlay: false,
+      cropMode: false,
+      cropRect: null, // { x, y, w, h } in canvas display coords
+      isDraggingCrop: false,
+      cropStart: null,
+
+      // Workbook state: multiple sheets
+      workbooks: [
+        {
+          id: 'sheet-1',
+          name: 'Sheet1',
+          headers: ['Column A', 'Column B', 'Column C', 'Column D'],
+          rows: [
+            ['', '', '', ''],
+            ['', '', '', ''],
+            ['', '', '', ''],
+            ['', '', '', '']
+          ],
+          sourceImageId: null
+        }
+      ],
+      activeSheetIndex: 0,
+      selectedCell: { row: 0, col: 0 },
+      sortDirection: 'asc',
+
+      // Undo / Redo stacks per sheet id
+      historyStacks: {},
+
+      // Settings persisted in localStorage
+      settings: {
+        exportFormat: 'xlsx',
+        ocrLang: 'eng',
+        autoGrayscale: false,
+        autoUpscale: false
+      },
+
+      // Cached Tesseract worker
+      tesseractWorker: null,
+      tesseractWorkerLang: null
+    };
+
+    /*************************************************************************
+     * 2. TOAST NOTIFICATION UTILITY (NO alert() OR confirm())
+     *************************************************************************/
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'bg-white border-[#E5E7EB] text-[#111827]',
+        success: 'bg-white border-emerald-200 text-[#111827]',
+        error: 'bg-white border-red-200 text-[#DC2626]'
+      };
+      const dotColors = {
+        info: 'bg-[#2563EB]',
+        success: 'bg-[#16A34A]',
+        error: 'bg-[#DC2626]'
+      };
+
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-md text-xs font-medium transition-all duration-200 ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full shrink-0 ${dotColors[type] || dotColors.info}"></span>
+        <span class="flex-1">${escapeHtml(message)}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(6px)';
+        setTimeout(() => toast.remove(), 220);
+      }, 3600);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /*************************************************************************
+     * 3. CLIENT-SIDE ROUTING & NAVIGATION
+     *************************************************************************/
+    function navigateTo(page) {
+      APP_STATE.currentPage = page;
+      document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`page-${page}`);
+      if (target) {
+        target.classList.remove('hidden');
+      }
+
+      // Highlight active nav item
+      document.querySelectorAll('.nav-link').forEach(btn => {
+        const isMatch = btn.getAttribute('data-nav') === page;
+        btn.classList.toggle('text-[#111827]', isMatch);
+        btn.classList.toggle('bg-[#F8FAFC]', isMatch);
+        btn.classList.toggle('font-semibold', isMatch);
+        btn.classList.toggle('text-[#64748B]', !isMatch);
+      });
+
+      if (page === 'history') {
+        renderHistoryPage();
+      } else if (page === 'converter') {
+        renderCanvasPreview();
+        renderSpreadsheet();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    function navigateToSection(sectionId) {
+      navigateTo('home');
+      setTimeout(() => {
+        const el = document.getElementById(`section-${sectionId}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 60);
+    }
+
+    function toggleMobileMenu(forceState) {
+      const menu = document.getElementById('mobile-menu');
+      if (typeof forceState === 'boolean') {
+        menu.classList.toggle('hidden', !forceState);
+      } else {
+        menu.classList.toggle('hidden');
+      }
+    }
+
+    /*************************************************************************
+     * 4. INDEXEDDB CONVERSION HISTORY SERVICE
+     *************************************************************************/
+    const HistoryService = {
+      dbName: 'ceet_db',
+      storeName: 'conversions',
+      version: 1,
+
+      openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(this.dbName, this.version);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(this.storeName)) {
+              db.createObjectStore(this.storeName, { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async saveConversion(record) {
+        try {
+          const db = await this.openDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            tx.objectStore(this.storeName).put(record);
+            tx.oncomplete = () => {
+              updateHistoryBadge();
+              resolve(true);
+            };
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch (err) {
+          console.error('IndexedDB save failed:', err);
+        }
+      },
+
+      async getAll() {
+        try {
+          const db = await this.openDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const req = tx.objectStore(this.storeName).getAll();
+            req.onsuccess = () => {
+              const items = req.result || [];
+              items.sort((a, b) => b.timestamp - a.timestamp);
+              resolve(items);
+            };
+            req.onerror = () => reject(req.error);
+          });
+        } catch (err) {
+          return [];
+        }
+      },
+
+      async deleteById(id) {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(this.storeName, 'readwrite');
+          tx.objectStore(this.storeName).delete(id);
+          tx.oncomplete = () => {
+            updateHistoryBadge();
+            resolve(true);
+          };
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async clearAll() {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(this.storeName, 'readwrite');
+          tx.objectStore(this.storeName).clear();
+          tx.oncomplete = () => {
+            updateHistoryBadge();
+            resolve(true);
+          };
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+    };
+
+    async function updateHistoryBadge() {
+      const items = await HistoryService.getAll();
+      const badge = document.getElementById('nav-history-badge');
+      if (items.length > 0) {
+        badge.textContent = items.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    /*************************************************************************
+     * 5. IMAGE UPLOAD & SAMPLE GENERATOR SYSTEM
+     *************************************************************************/
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+
+    // Setup Drag & Drop listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropZone = document.getElementById('drop-zone');
+      if (dropZone) {
+        ['dragenter', 'dragover'].forEach(evt => {
+          dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-[#2563EB]', 'bg-blue-50/50');
+          });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+          dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-[#2563EB]', 'bg-blue-50/50');
+          });
+        });
+        dropZone.addEventListener('drop', (e) => {
+          if (e.dataTransfer && e.dataTransfer.files) {
+            processUploadedFiles(Array.from(e.dataTransfer.files));
+          }
+        });
+      }
+
+      loadSavedSettings();
+      updateHistoryBadge();
+      initCanvasCropListeners();
+      renderSpreadsheet();
+      lucide.createIcons();
+    });
+
+    function handleFileSelect(event) {
+      const files = Array.from(event.target.files || []);
+      processUploadedFiles(files);
+      event.target.value = '';
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function processUploadedFiles(files) {
+      if (!files.length) return;
+      let addedCount = 0;
+
+      files.forEach(file => {
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          showToast(`Unsupported file "${file.name}". Use JPG, PNG, or WEBP.`, 'error');
+          return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          showToast(`"${file.name}" exceeds 25MB limit.`, 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imgObj = {
+            id: 'img-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            originalDataUrl: e.target.result,
+            croppedDataUrl: e.target.result,
+            filters: {
+              rotation: 0,
+              grayscale: APP_STATE.settings.autoGrayscale,
+              contrast: 100,
+              brightness: 100,
+              sharpen: false,
+              scale: APP_STATE.settings.autoUpscale ? 1.5 : 1
+            },
+            ocrResult: null
+          };
+          APP_STATE.images.push(imgObj);
+          if (!APP_STATE.activeImageId) {
+            APP_STATE.activeImageId = imgObj.id;
+          }
+          renderImageQueue();
+          syncFilterControlsUI();
+          renderCanvasPreview();
+        };
+        reader.onerror = () => {
+          showToast(`Failed to read "${file.name}". Image may be corrupted.`, 'error');
+        };
+        reader.readAsDataURL(file);
+        addedCount++;
+      });
+
+      if (addedCount > 0) {
+        showToast(`Added ${addedCount} image${addedCount > 1 ? 's' : ''} to workspace.`, 'success');
+      }
+    }
+
+    // Generates a crisp, real high-resolution tabular image on HTML Canvas for instant testing
+    function generateSampleTableImageDataUrl() {
+      const c = document.createElement('canvas');
+      c.width = 960;
+      c.height = 460;
+      const ctx = c.getContext('2d');
+
+      // White crisp paper background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      // Header Banner
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 24px Arial, sans-serif';
+      ctx.fillText('QUARTERLY EXAMINATION RESULTS - GRADE 10', 48, 56);
+
+      // Table Grid Lines & Crisp Text
+      const startX = 48;
+      const startY = 95;
+      const colWidths = [130, 260, 140, 140, 170];
+      const rowHeight = 54;
+
+      const sampleRows = [
+        ['ROLL NO', 'STUDENT NAME', 'PHYSICS', 'MATHS', 'GRADE'],
+        ['1001', 'Aarav Menon', '92', '96', 'A+'],
+        ['1002', 'Diya Nair', '85', '89', 'A'],
+        ['1003', 'Rohan Varma', '78', '82', 'B+'],
+        ['1004', 'Meera Krishnan', '95', '98', 'A+'],
+        ['1005', 'Kiran Thomas', '81', '84', 'A']
+      ];
+
+      sampleRows.forEach((row, rIdx) => {
+        const y = startY + rIdx * rowHeight;
+        // Header row subtle shading
+        if (rIdx === 0) {
+          ctx.fillStyle = '#F1F5F9';
+          ctx.fillRect(startX, y, colWidths.reduce((a, b) => a + b, 0), rowHeight);
+        }
+
+        let x = startX;
+        row.forEach((cellText, cIdx) => {
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x, y, colWidths[cIdx], rowHeight);
+
+          ctx.fillStyle = '#0F172A';
+          ctx.font = rIdx === 0 ? 'bold 19px Arial, sans-serif' : '19px Arial, sans-serif';
+          ctx.fillText(cellText, x + 16, y + 34);
+          x += colWidths[cIdx];
+        });
+      });
+
+      return c.toDataURL('image/png');
+    }
+
+    function loadSampleDocument() {
+      const dataUrl = generateSampleTableImageDataUrl();
+      const imgObj = {
+        id: 'img-sample-' + Date.now(),
+        name: 'Exam_Marks_Sample.png',
+        size: 48200,
+        type: 'image/png',
+        originalDataUrl: dataUrl,
+        croppedDataUrl: dataUrl,
+        filters: {
+          rotation: 0,
+          grayscale: false,
+          contrast: 100,
+          brightness: 100,
+          sharpen: false,
+          scale: 1
+        },
+        ocrResult: null
+      };
+      APP_STATE.images.push(imgObj);
+      APP_STATE.activeImageId = imgObj.id;
+      renderImageQueue();
+      syncFilterControlsUI();
+      renderCanvasPreview();
+      showToast('Sample table image loaded. Click "Extract Current Image" to run OCR.', 'info');
+    }
+
+    function launchWithSample() {
+      navigateTo('converter');
+      if (APP_STATE.images.length === 0) {
+        loadSampleDocument();
+      }
+    }
+
+    function getActiveImage() {
+      return APP_STATE.images.find(img => img.id === APP_STATE.activeImageId) || null;
+    }
+
+    function selectActiveImage(id) {
+      APP_STATE.activeImageId = id;
+      APP_STATE.cropMode = false;
+      APP_STATE.cropRect = null;
+      document.getElementById('crop-action-bar').classList.add('hidden');
+      renderImageQueue();
+      syncFilterControlsUI();
+      renderCanvasPreview();
+
+      // Switch to corresponding worksheet if already extracted
+      const sheetIdx = APP_STATE.workbooks.findIndex(s => s.sourceImageId === id);
+      if (sheetIdx !== -1) {
+        APP_STATE.activeSheetIndex = sheetIdx;
+        renderSpreadsheet();
+      }
+
+      const active = getActiveImage();
+      if (active && active.ocrResult) {
+        document.getElementById('raw-ocr-textarea').value = active.ocrResult.rawText || '';
+        document.getElementById('ocr-metrics-box').classList.remove('hidden');
+        document.getElementById('ocr-confidence-val').textContent = Math.round(active.ocrResult.confidence) + '%';
+        document.getElementById('ocr-wordcount-val').textContent = active.ocrResult.words.length;
+      }
+    }
+
+    function removeImage(id, event) {
+      if (event) event.stopPropagation();
+      APP_STATE.images = APP_STATE.images.filter(img => img.id !== id);
+      if (APP_STATE.activeImageId === id) {
+        APP_STATE.activeImageId = APP_STATE.images.length ? APP_STATE.images[0].id : null;
+      }
+      renderImageQueue();
+      syncFilterControlsUI();
+      renderCanvasPreview();
+    }
+
+    function clearAllImages() {
+      APP_STATE.images = [];
+      APP_STATE.activeImageId = null;
+      renderImageQueue();
+      renderCanvasPreview();
+      showToast('Cleared all uploaded images.', 'info');
+    }
+
+    function renderImageQueue() {
+      const container = document.getElementById('image-queue-list');
+      const clearBtn = document.getElementById('btn-clear-images');
+      const btnActive = document.getElementById('btn-extract-active');
+      const btnAll = document.getElementById('btn-extract-all');
+      const countLabel = document.getElementById('queue-count-label');
+
+      countLabel.textContent = APP_STATE.images.length;
+      btnActive.disabled = APP_STATE.images.length === 0;
+      btnAll.disabled = APP_STATE.images.length === 0;
+      clearBtn.classList.toggle('hidden', APP_STATE.images.length === 0);
+
+      if (APP_STATE.images.length === 0) {
+        container.innerHTML = `
+          <div class="text-xs text-center text-[#64748B] py-4 border border-[#E5E7EB] rounded-lg bg-[#F8FAFC]">
+            No images uploaded yet. Upload files or click <strong>Load Sample Table Image</strong>.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = APP_STATE.images.map(img => {
+        const isActive = img.id === APP_STATE.activeImageId;
+        const statusBadge = img.ocrResult
+          ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-[#16A34A]">Extracted</span>`
+          : `<span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-[#64748B]">Ready</span>`;
+
+        return `
+          <div onclick="selectActiveImage('${img.id}')" class="flex items-center gap-2.5 p-2 rounded-lg border transition cursor-pointer ${isActive ? 'border-[#2563EB] bg-blue-50/40' : 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC]'}">
+            <img src="${img.croppedDataUrl}" alt="${escapeHtml(img.name)}" class="w-11 h-11 object-cover rounded-md border border-[#E5E7EB] shrink-0 bg-white" />
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-semibold text-[#111827] truncate">${escapeHtml(img.name)}</div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[11px] text-[#64748B]">${formatBytes(img.size)}</span>
+                ${statusBadge}
+              </div>
+            </div>
+            <button onclick="removeImage('${img.id}', event)" class="p-1.5 rounded-md text-[#64748B] hover:text-[#DC2626] hover:bg-red-50 transition cursor-pointer" title="Remove">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    /*************************************************************************
+     * 6. HTML5 CANVAS IMAGE PROCESSING & CROP ENGINE
+     *************************************************************************/
+    function syncFilterControlsUI() {
+      const img = getActiveImage();
+      const nameEl = document.getElementById('active-image-name');
+      if (!img) {
+        nameEl.textContent = '';
+        return;
+      }
+      nameEl.textContent = `(${img.name})`;
+      document.getElementById('ctrl-rotate-val').textContent = img.filters.rotation;
+      document.getElementById('ctrl-contrast').value = img.filters.contrast;
+      document.getElementById('ctrl-contrast-val').textContent = img.filters.contrast + '%';
+      document.getElementById('ctrl-brightness').value = img.filters.brightness;
+      document.getElementById('ctrl-brightness-val').textContent = img.filters.brightness + '%';
+      document.getElementById('ctrl-scale').value = String(img.filters.scale);
+
+      const grayBtn = document.getElementById('btn-toggle-gray');
+      grayBtn.classList.toggle('border-[#2563EB]', img.filters.grayscale);
+      grayBtn.classList.toggle('bg-blue-50', img.filters.grayscale);
+
+      const sharpBtn = document.getElementById('btn-toggle-sharpen');
+      sharpBtn.classList.toggle('border-[#2563EB]', img.filters.sharpen);
+      sharpBtn.classList.toggle('bg-blue-50', img.filters.sharpen);
+    }
+
+    function setCompareOriginal(showOrig) {
+      APP_STATE.compareOriginal = showOrig;
+      const btnEnh = document.getElementById('btn-view-enhanced');
+      const btnOrig = document.getElementById('btn-view-original');
+      if (showOrig) {
+        btnOrig.className = 'px-2.5 py-1 rounded-md font-semibold bg-white text-[#111827] shadow-2xs transition cursor-pointer';
+        btnEnh.className = 'px-2.5 py-1 rounded-md font-medium text-[#64748B] hover:text-[#111827] transition cursor-pointer';
+      } else {
+        btnEnh.className = 'px-2.5 py-1 rounded-md font-semibold bg-white text-[#111827] shadow-2xs transition cursor-pointer';
+        btnOrig.className = 'px-2.5 py-1 rounded-md font-medium text-[#64748B] hover:text-[#111827] transition cursor-pointer';
+      }
+      renderCanvasPreview();
+    }
+
+    function rotateActiveImage() {
+      const img = getActiveImage();
+      if (!img) return;
+      img.filters.rotation = (img.filters.rotation + 90) % 360;
+      syncFilterControlsUI();
+      renderCanvasPreview();
+    }
+
+    function toggleFilter(key) {
+      const img = getActiveImage();
+      if (!img) return;
+      img.filters[key] = !img.filters[key];
+      syncFilterControlsUI();
+      renderCanvasPreview();
+    }
+
+    function updateFilter(key, val) {
+      const img = getActiveImage();
+      if (!img) return;
+      img.filters[key] = val;
+      syncFilterControlsUI();
+      renderCanvasPreview();
+    }
+
+    function resetImageFilters() {
+      const img = getActiveImage();
+      if (!img) return;
+      img.croppedDataUrl = img.originalDataUrl;
+      img.filters = {
+        rotation: 0,
+        grayscale: false,
+        contrast: 100,
+        brightness: 100,
+        sharpen: false,
+        scale: 1
+      };
+      APP_STATE.cropRect = null;
+      syncFilterControlsUI();
+      renderCanvasPreview();
+      showToast('Image adjustments reset to original.', 'info');
+    }
+
+    function applyConvolutionSharpen(ctx, width, height) {
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const src = imgData.data;
+      const out = ctx.createImageData(width, height);
+      const dst = out.data;
+
+      // 3x3 sharpening kernel
+      const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          let r = 0, g = 0, b = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const idx = ((y + ky) * width + (x + kx)) * 4;
+              const weight = kernel[(ky + 1) * 3 + (kx + 1)];
+              r += src[idx] * weight;
+              g += src[idx + 1] * weight;
+              b += src[idx + 2] * weight;
+            }
+          }
+          const dstIdx = (y * width + x) * 4;
+          dst[dstIdx] = Math.min(255, Math.max(0, r));
+          dst[dstIdx + 1] = Math.min(255, Math.max(0, g));
+          dst[dstIdx + 2] = Math.min(255, Math.max(0, b));
+          dst[dstIdx + 3] = src[dstIdx + 3];
+        }
+      }
+      ctx.putImageData(out, 0, 0);
+    }
+
+    // Builds a processed offscreen canvas for OCR and preview
+    function buildProcessedCanvas(imgObj, forceOriginal = false) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          if (forceOriginal) {
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0);
+            resolve(canvas);
+            return;
+          }
+
+          const { rotation, grayscale, contrast, brightness, sharpen, scale } = imgObj.filters;
+          const rad = (rotation * Math.PI) / 180;
+          const scaledW = Math.round(image.width * scale);
+          const scaledH = Math.round(image.height * scale);
+
+          if (rotation === 90 || rotation === 270) {
+            canvas.width = scaledH;
+            canvas.height = scaledW;
+          } else {
+            canvas.width = scaledW;
+            canvas.height = scaledH;
+          }
+
+          ctx.save();
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(rad);
+
+          const filterParts = [];
+          if (grayscale) filterParts.push('grayscale(100%)');
+          if (contrast !== 100) filterParts.push(`contrast(${contrast}%)`);
+          if (brightness !== 100) filterParts.push(`brightness(${brightness}%)`);
+          ctx.filter = filterParts.length ? filterParts.join(' ') : 'none';
+
+          ctx.drawImage(image, -scaledW / 2, -scaledH / 2, scaledW, scaledH);
+          ctx.restore();
+
+          if (sharpen && canvas.width * canvas.height <= 4500000) {
+            applyConvolutionSharpen(ctx, canvas.width, canvas.height);
+          }
+
+          resolve(canvas);
+        };
+        image.onerror = reject;
+        image.src = forceOriginal ? imgObj.originalDataUrl : imgObj.croppedDataUrl;
+      });
+    }
+
+    async function renderCanvasPreview() {
+      const imgObj = getActiveImage();
+      const canvas = document.getElementById('preview-canvas');
+      const emptyState = document.getElementById('canvas-empty-state');
+
+      if (!imgObj) {
+        canvas.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      canvas.classList.remove('hidden');
+
+      const processed = await buildProcessedCanvas(imgObj, APP_STATE.compareOriginal);
+      canvas.width = processed.width;
+      canvas.height = processed.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(processed, 0, 0);
+
+      // Draw OCR word bounding-box overlay if enabled
+      if (APP_STATE.showBBoxOverlay && imgObj.ocrResult && imgObj.ocrResult.words && !APP_STATE.compareOriginal) {
+        ctx.save();
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = Math.max(1.5, canvas.width / 500);
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.12)';
+        imgObj.ocrResult.words.forEach(w => {
+          const { x0, y0, x1, y1 } = w.bbox;
+          ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+          ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+        });
+        ctx.restore();
+      }
+
+      // Draw active Crop selection box if cropping
+      if (APP_STATE.cropMode && APP_STATE.cropRect) {
+        const { x, y, w, h } = APP_STATE.cropRect;
+        ctx.save();
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.18)';
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+        ctx.restore();
+      }
+    }
+
+    function toggleBBoxOverlay() {
+      APP_STATE.showBBoxOverlay = !APP_STATE.showBBoxOverlay;
+      document.getElementById('btn-toggle-bbox').textContent = APP_STATE.showBBoxOverlay ? 'Hide Boxes' : 'Show Boxes';
+      renderCanvasPreview();
+    }
+
+    // Interactive Crop Tool on Canvas
+    function toggleCropMode(force) {
+      const img = getActiveImage();
+      if (!img) return;
+      APP_STATE.cropMode = typeof force === 'boolean' ? force : !APP_STATE.cropMode;
+      APP_STATE.cropRect = null;
+      document.getElementById('crop-action-bar').classList.toggle('hidden', !APP_STATE.cropMode);
+      const btn = document.getElementById('btn-crop-mode');
+      btn.classList.toggle('border-[#2563EB]', APP_STATE.cropMode);
+      btn.classList.toggle('bg-blue-50', APP_STATE.cropMode);
+      renderCanvasPreview();
+    }
+
+    function initCanvasCropListeners() {
+      const canvas = document.getElementById('preview-canvas');
+      if (!canvas) return;
+
+      const getCanvasPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: Math.max(0, Math.min(canvas.width, (clientX - rect.left) * scaleX)),
+          y: Math.max(0, Math.min(canvas.height, (clientY - rect.top) * scaleY))
+        };
+      };
+
+      const onStart = (e) => {
+        if (!APP_STATE.cropMode) return;
+        APP_STATE.isDraggingCrop = true;
+        APP_STATE.cropStart = getCanvasPos(e);
+        APP_STATE.cropRect = { x: APP_STATE.cropStart.x, y: APP_STATE.cropStart.y, w: 0, h: 0 };
+      };
+
+      const onMove = (e) => {
+        if (!APP_STATE.cropMode || !APP_STATE.isDraggingCrop) return;
+        const pos = getCanvasPos(e);
+        APP_STATE.cropRect = {
+          x: Math.min(APP_STATE.cropStart.x, pos.x),
+          y: Math.min(APP_STATE.cropStart.y, pos.y),
+          w: Math.abs(pos.x - APP_STATE.cropStart.x),
+          h: Math.abs(pos.y - APP_STATE.cropStart.y)
+        };
+        renderCanvasPreview();
+      };
+
+      const onEnd = () => {
+        APP_STATE.isDraggingCrop = false;
+      };
+
+      canvas.addEventListener('mousedown', onStart);
+      canvas.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+      canvas.addEventListener('touchstart', onStart, { passive: true });
+      canvas.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onEnd);
+    }
+
+    async function applyCropSelection() {
+      const imgObj = getActiveImage();
+      if (!imgObj || !APP_STATE.cropRect || APP_STATE.cropRect.w < 15 || APP_STATE.cropRect.h < 15) {
+        showToast('Drag a larger crop rectangle on the image first.', 'error');
+        return;
+      }
+
+      const processed = await buildProcessedCanvas(imgObj, false);
+      const { x, y, w, h } = APP_STATE.cropRect;
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = Math.round(w);
+      cropCanvas.height = Math.round(h);
+      const ctx = cropCanvas.getContext('2d');
+      ctx.drawImage(processed, x, y, w, h, 0, 0, cropCanvas.width, cropCanvas.height);
+
+      imgObj.croppedDataUrl = cropCanvas.toDataURL('image/png');
+      imgObj.filters.rotation = 0;
+      imgObj.filters.scale = 1;
+      toggleCropMode(false);
+      renderImageQueue();
+      renderCanvasPreview();
+      showToast('Image cropped successfully.', 'success');
+    }
+
+    /*************************************************************************
+     * 7. REAL LOCAL OCR ENGINE (TESSERACT.JS) + 5-STAGE PROGRESS
+     *************************************************************************/
+    function updateOCRStageUI(activeStage, percent, labelText) {
+      const bar = document.getElementById('ocr-progress-bar');
+      const badge = document.getElementById('ocr-percent-badge');
+      bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+      badge.textContent = labelText || `${Math.round(percent)}%`;
+
+      document.querySelectorAll('#ocr-stages-list li').forEach(li => {
+        const st = parseInt(li.getAttribute('data-stage'), 10);
+        const dot = li.querySelector('.stage-dot');
+        if (st < activeStage) {
+          li.className = 'flex items-center gap-2 text-[#16A34A] font-medium';
+          dot.className = 'stage-dot w-2 h-2 rounded-full bg-[#16A34A]';
+        } else if (st === activeStage) {
+          li.className = 'flex items-center gap-2 text-[#2563EB] font-semibold';
+          dot.className = 'stage-dot w-2 h-2 rounded-full bg-[#2563EB] animate-pulse';
+        } else {
+          li.className = 'flex items-center gap-2 text-[#64748B]';
+          dot.className = 'stage-dot w-2 h-2 rounded-full bg-slate-300';
+        }
+      });
+    }
+
+    async function getOrCreateTesseractWorker(lang) {
+      if (typeof Tesseract === 'undefined') {
+        throw new Error('Tesseract.js library failed to load. Check internet connection for initial WASM bundle.');
+      }
+      if (APP_STATE.tesseractWorker && APP_STATE.tesseractWorkerLang === lang) {
+        return APP_STATE.tesseractWorker;
+      }
+      if (APP_STATE.tesseractWorker) {
+        await APP_STATE.tesseractWorker.terminate();
+      }
+      const worker = await Tesseract.createWorker(lang, 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+            const pct = 30 + Math.round(m.progress * 50); // maps 0..1 to 30%..80%
+            updateOCRStageUI(3, pct, `Recognizing ${Math.round(m.progress * 100)}%`);
+          } else if (m.status && m.status.includes('loading')) {
+            updateOCRStageUI(1, 15, 'Loading engine...');
+          }
+        }
+      });
+      APP_STATE.tesseractWorker = worker;
+      APP_STATE.tesseractWorkerLang = lang;
+      return worker;
+    }
+
+    async function processSingleImageOCR(imgObj) {
+      try {
+        // Stage 1: Loading OCR Engine
+        updateOCRStageUI(1, 10, 'Loading engine...');
+        const worker = await getOrCreateTesseractWorker(APP_STATE.settings.ocrLang || 'eng');
+
+        // Stage 2: Preparing Image
+        updateOCRStageUI(2, 25, 'Preparing image...');
+        const canvas = await buildProcessedCanvas(imgObj, false);
+
+        // Stage 3: Recognizing Text
+        updateOCRStageUI(3, 32, 'Recognizing text...');
+        const result = await worker.recognize(canvas);
+
+        // Stage 4: Detecting Table Structure
+        updateOCRStageUI(4, 86, 'Detecting table...');
+        const words = (result.data.words || [])
+          .filter(w => w.text && w.text.trim().length > 0)
+          .map(w => ({
+            text: w.text.trim(),
+            confidence: w.confidence,
+            bbox: w.bbox
+          }));
+
+        imgObj.ocrResult = {
+          rawText: result.data.text || '',
+          confidence: result.data.confidence || 0,
+          words
+        };
+
+        if (words.length === 0) {
+          showToast(`No readable text detected in "${imgObj.name}". Try increasing contrast or scale.`, 'error');
+        } else if (result.data.confidence < 55) {
+          showToast(`Low OCR confidence (${Math.round(result.data.confidence)}%) on "${imgObj.name}". Try Grayscale + Contrast enhancement.`, 'info');
+        }
+
+        const gapThreshold = parseInt(document.getElementById('col-gap-slider').value, 10) || 32;
+        const firstRowHeader = document.getElementById('chk-first-row-header').checked;
+        const tableData = reconstructTableFromCoordinates(words, gapThreshold, firstRowHeader, false);
+
+        // Stage 5: Preparing Spreadsheet
+        updateOCRStageUI(5, 96, 'Building sheet...');
+        assignExtractedTableToWorkbook(imgObj, tableData);
+
+        updateOCRStageUI(6, 100, 'Completed');
+
+        // Update UI metrics
+        document.getElementById('raw-ocr-textarea').value = imgObj.ocrResult.rawText;
+        document.getElementById('ocr-metrics-box').classList.remove('hidden');
+        document.getElementById('ocr-confidence-val').textContent = Math.round(imgObj.ocrResult.confidence) + '%';
+        document.getElementById('ocr-wordcount-val').textContent = words.length;
+
+        renderImageQueue();
+        renderCanvasPreview();
+        return true;
+      } catch (err) {
+        console.error('OCR Error:', err);
+        updateOCRStageUI(0, 0, 'Error');
+        showToast(`OCR failed: ${err.message || 'Unknown error'}`, 'error');
+        return false;
+      }
+    }
+
+    async function runOCROnActiveImage() {
+      const imgObj = getActiveImage();
+      if (!imgObj) return;
+      const btn = document.getElementById('btn-extract-active');
+      btn.disabled = true;
+      const ok = await processSingleImageOCR(imgObj);
+      btn.disabled = false;
+      if (ok) {
+        await saveCurrentWorkbookToHistory(imgObj.name);
+        showToast(`Extracted table from "${imgObj.name}".`, 'success');
+      }
+    }
+
+    async function runOCROnAllImages() {
+      if (!APP_STATE.images.length) return;
+      const btnAll = document.getElementById('btn-extract-all');
+      const btnAct = document.getElementById('btn-extract-active');
+      btnAll.disabled = true;
+      btnAct.disabled = true;
+
+      let successCount = 0;
+      for (let i = 0; i < APP_STATE.images.length; i++) {
+        const imgObj = APP_STATE.images[i];
+        APP_STATE.activeImageId = imgObj.id;
+        renderImageQueue();
+        renderCanvasPreview();
+        const ok = await processSingleImageOCR(imgObj);
+        if (ok) successCount++;
+      }
+
+      btnAll.disabled = false;
+      btnAct.disabled = false;
+
+      if (successCount > 0) {
+        await saveCurrentWorkbookToHistory(`Batch (${successCount} images)`);
+        showToast(`Completed batch extraction for ${successCount} image(s) into separate worksheets.`, 'success');
+      }
+    }
+
+    /*************************************************************************
+     * 8. COORDINATE-BASED SMART TABLE DETECTION ALGORITHM
+     *************************************************************************/
+    function reconstructTableFromCoordinates(words, colGapThreshold = 32, firstRowIsHeader = true, lineByLineFallback = false) {
+      if (!words || words.length === 0) {
+        return {
+          headers: ['Column A'],
+          rows: [['No text detected']]
+        };
+      }
+
+      // Step A: Sort words top-to-bottom by vertical center Y
+      const enriched = words.map(w => {
+        const height = Math.max(1, w.bbox.y1 - w.bbox.y0);
+        const yCenter = (w.bbox.y0 + w.bbox.y1) / 2;
+        const xCenter = (w.bbox.x0 + w.bbox.x1) / 2;
+        return { ...w, height, yCenter, xCenter };
+      }).sort((a, b) => a.yCenter - b.yCenter);
+
+      // Step B: Group words into horizontal rows/lines using vertical overlap tolerance
+      const rowsOfWords = [];
+      enriched.forEach(word => {
+        let placed = false;
+        for (const row of rowsOfWords) {
+          const avgY = row.reduce((sum, item) => sum + item.yCenter, 0) / row.length;
+          const avgH = row.reduce((sum, item) => sum + item.height, 0) / row.length;
+          if (Math.abs(word.yCenter - avgY) <= avgH * 0.62) {
+            row.push(word);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          rowsOfWords.push([word]);
+        }
+      });
+
+      // Sort words left-to-right within each row
+      rowsOfWords.forEach(row => row.sort((a, b) => a.bbox.x0 - b.bbox.x0));
+
+      // Fallback single-column mode if requested
+      if (lineByLineFallback) {
+        const lines = rowsOfWords.map(r => [r.map(w => w.text).join(' ')]);
+        if (firstRowIsHeader && lines.length > 1) {
+          return { headers: lines[0], rows: lines.slice(1) };
+        }
+        return { headers: ['Extracted Line'], rows: lines };
+      }
+
+      // Step C: Within each row, merge words separated by small horizontal space (< colGapThreshold) into cell tokens
+      const rowCellTokens = rowsOfWords.map(row => {
+        const cells = [];
+        let current = {
+          text: row[0].text,
+          x0: row[0].bbox.x0,
+          x1: row[0].bbox.x1
+        };
+        for (let i = 1; i < row.length; i++) {
+          const w = row[i];
+          const gap = w.bbox.x0 - current.x1;
+          if (gap <= colGapThreshold) {
+            current.text += ' ' + w.text;
+            current.x1 = Math.max(current.x1, w.bbox.x1);
+          } else {
+            cells.push(current);
+            current = { text: w.text, x0: w.bbox.x0, x1: w.bbox.x1 };
+          }
+        }
+        cells.push(current);
+        return cells;
+      });
+
+      // Step D: Cluster horizontal column intervals across all rows to detect global column boundaries
+      const allTokens = rowCellTokens.flat().sort((a, b) => a.x0 - b.x0);
+      const columnClusters = []; // Each cluster: { minX, maxX, centerX }
+
+      allTokens.forEach(tok => {
+        const tokCenter = (tok.x0 + tok.x1) / 2;
+        let bestCluster = null;
+        let bestScore = Infinity;
+
+        for (const col of columnClusters) {
+          // Check horizontal interval overlap OR center proximity
+          const overlap = Math.min(tok.x1, col.maxX) - Math.max(tok.x0, col.minX);
+          const dist = Math.abs(tokCenter - col.centerX);
+          if (overlap > -colGapThreshold * 0.45 || dist < colGapThreshold * 1.15) {
+            const score = dist - Math.max(0, overlap);
+            if (score < bestScore) {
+              bestScore = score;
+              bestCluster = col;
+            }
+          }
+        }
+
+        if (bestCluster) {
+          bestCluster.minX = Math.min(bestCluster.minX, tok.x0);
+          bestCluster.maxX = Math.max(bestCluster.maxX, tok.x1);
+          bestCluster.centerX = (bestCluster.minX + bestCluster.maxX) / 2;
+        } else {
+          columnClusters.push({
+            minX: tok.x0,
+            maxX: tok.x1,
+            centerX: tokCenter
+          });
+        }
+      });
+
+      // Sort detected columns left-to-right
+      columnClusters.sort((a, b) => a.minX - b.minX);
+      const numCols = Math.max(1, columnClusters.length);
+
+      // Step E: Map every row's cell tokens into the aligned column grid, preserving empty cells
+      const matrix = rowCellTokens.map(rowTokens => {
+        const gridRow = new Array(numCols).fill('');
+        rowTokens.forEach(tok => {
+          const tokCenter = (tok.x0 + tok.x1) / 2;
+          let targetIdx = 0;
+          let minDiff = Infinity;
+          columnClusters.forEach((col, idx) => {
+            const diff = Math.abs(tokCenter - col.centerX);
+            if (diff < minDiff) {
+              minDiff = diff;
+              targetIdx = idx;
+            }
+          });
+          gridRow[targetIdx] = gridRow[targetIdx]
+            ? `${gridRow[targetIdx]} ${tok.text}`
+            : tok.text;
+        });
+        return gridRow;
+      });
+
+      if (firstRowIsHeader && matrix.length > 1) {
+        const headers = matrix[0].map((h, i) => h.trim() || `Column ${String.fromCharCode(65 + (i % 26))}`);
+        return {
+          headers,
+          rows: matrix.slice(1)
+        };
+      }
+
+      const defaultHeaders = Array.from({ length: numCols }, (_, i) => `Column ${String.fromCharCode(65 + (i % 26))}`);
+      return {
+        headers: defaultHeaders,
+        rows: matrix
+      };
+    }
+
+    function reprocessActiveTableStructure(lineByLine = false) {
+      const imgObj = getActiveImage();
+      if (!imgObj || !imgObj.ocrResult) {
+        showToast('Extract text from an image first before adjusting table detection.', 'info');
+        return;
+      }
+      const gapThreshold = parseInt(document.getElementById('col-gap-slider').value, 10) || 32;
+      const firstRowHeader = document.getElementById('chk-first-row-header').checked;
+      const tableData = reconstructTableFromCoordinates(imgObj.ocrResult.words, gapThreshold, firstRowHeader, lineByLine);
+      assignExtractedTableToWorkbook(imgObj, tableData);
+      showToast(lineByLine ? 'Switched to line-by-line table layout.' : 'Reconstructed table columns.', 'success');
+    }
+
+    function toggleRawTextDrawer(force) {
+      const drawer = document.getElementById('raw-text-drawer');
+      if (typeof force === 'boolean') {
+        drawer.classList.toggle('hidden', !force);
+      } else {
+        drawer.classList.toggle('hidden');
+      }
+    }
+
+    /*************************************************************************
+     * 9. INTERACTIVE MULTI-WORKSHEET SPREADSHEET EDITOR
+     *************************************************************************/
+    function sanitizeSheetName(rawName) {
+      // Excel sheet names max 31 chars, no \ / ? * [ ] :
+      const cleaned = rawName.replace(/\.[^/.]+$/, '').replace(/[\\/?*[\]:]/g, '_').trim();
+      return (cleaned || 'Sheet').slice(0, 31);
+    }
+
+    function assignExtractedTableToWorkbook(imgObj, tableData) {
+      const existingIdx = APP_STATE.workbooks.findIndex(s => s.sourceImageId === imgObj.id);
+      const sheetName = sanitizeSheetName(imgObj.name);
+
+      if (existingIdx !== -1) {
+        pushUndoState(APP_STATE.workbooks[existingIdx]);
+        APP_STATE.workbooks[existingIdx].headers = tableData.headers;
+        APP_STATE.workbooks[existingIdx].rows = tableData.rows;
+        APP_STATE.activeSheetIndex = existingIdx;
+      } else {
+        // Replace initial empty default Sheet1 if it has never been edited
+        const isFirstBlank =
+          APP_STATE.workbooks.length === 1 &&
+          !APP_STATE.workbooks[0].sourceImageId &&
+          APP_STATE.workbooks[0].rows.every(r => r.every(c => c === ''));
+
+        const newSheet = {
+          id: 'sheet-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          name: sheetName,
+          headers: tableData.headers,
+          rows: tableData.rows,
+          sourceImageId: imgObj.id
+        };
+
+        if (isFirstBlank) {
+          APP_STATE.workbooks[0] = newSheet;
+          APP_STATE.activeSheetIndex = 0;
+        } else {
+          // Ensure unique tab name
+          let uniqueName = sheetName;
+          let counter = 2;
+          while (APP_STATE.workbooks.some(s => s.name === uniqueName)) {
+            uniqueName = `${sheetName.slice(0, 27)}_${counter++}`;
+          }
+          newSheet.name = uniqueName;
+          APP_STATE.workbooks.push(newSheet);
+          APP_STATE.activeSheetIndex = APP_STATE.workbooks.length - 1;
+        }
+      }
+
+      renderSpreadsheet();
+    }
+
+    function getActiveSheet() {
+      if (APP_STATE.activeSheetIndex >= APP_STATE.workbooks.length) {
+        APP_STATE.activeSheetIndex = Math.max(0, APP_STATE.workbooks.length - 1);
+      }
+      return APP_STATE.workbooks[APP_STATE.activeSheetIndex];
+    }
+
+    function pushUndoState(sheet) {
+      if (!APP_STATE.historyStacks[sheet.id]) {
+        APP_STATE.historyStacks[sheet.id] = { undo: [], redo: [] };
+      }
+      const stack = APP_STATE.historyStacks[sheet.id];
+      stack.undo.push(JSON.stringify({ headers: sheet.headers, rows: sheet.rows }));
+      if (stack.undo.length > 40) stack.undo.shift();
+      stack.redo = [];
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+      const sheet = getActiveSheet();
+      const stack = (sheet && APP_STATE.historyStacks[sheet.id]) || { undo: [], redo: [] };
+      document.getElementById('btn-undo').disabled = stack.undo.length === 0;
+      document.getElementById('btn-redo').disabled = stack.redo.length === 0;
+    }
+
+    function undoSheet() {
+      const sheet = getActiveSheet();
+      const stack = APP_STATE.historyStacks[sheet.id];
+      if (!stack || !stack.undo.length) return;
+      stack.redo.push(JSON.stringify({ headers: sheet.headers, rows: sheet.rows }));
+      const prev = JSON.parse(stack.undo.pop());
+      sheet.headers = prev.headers;
+      sheet.rows = prev.rows;
+      renderSpreadsheet();
+    }
+
+    function redoSheet() {
+      const sheet = getActiveSheet();
+      const stack = APP_STATE.historyStacks[sheet.id];
+      if (!stack || !stack.redo.length) return;
+      stack.undo.push(JSON.stringify({ headers: sheet.headers, rows: sheet.rows }));
+      const next = JSON.parse(stack.redo.pop());
+      sheet.headers = next.headers;
+      sheet.rows = next.rows;
+      renderSpreadsheet();
+    }
+
+    function renderSpreadsheet() {
+      const sheet = getActiveSheet();
+      if (!sheet) return;
+
+      const table = document.getElementById('spreadsheet-table');
+      const searchQuery = (document.getElementById('sheet-search-input').value || '').trim().toLowerCase();
+
+      // Update row x col badge
+      document.getElementById('sheet-dimensions-badge').textContent = `${sheet.rows.length} rows × ${sheet.headers.length} cols`;
+      updateUndoRedoButtons();
+
+      // Build Header Row
+      let theadHtml = `
+        <thead class="sticky top-0 z-20 bg-[#F8FAFC] border-b border-[#E5E7EB]">
+          <tr>
+            <th class="w-10 py-2 px-2 text-center font-mono text-[11px] font-semibold text-[#64748B] border-r border-[#E5E7EB] bg-[#F8FAFC]">#</th>
+      `;
+
+      sheet.headers.forEach((header, cIdx) => {
+        const isSelectedCol = APP_STATE.selectedCell.col === cIdx;
+        theadHtml += `
+          <th class="min-w-[130px] border-r border-[#E5E7EB] p-0 ${isSelectedCol ? 'bg-blue-50/70' : 'bg-[#F8FAFC]'}">
+            <input
+              type="text"
+              value="${escapeHtml(header)}"
+              onfocus="selectCell(0, ${cIdx})"
+              onchange="updateHeaderValue(${cIdx}, this.value)"
+              class="w-full px-2.5 py-2 bg-transparent font-semibold text-xs text-[#111827] focus:bg-white focus:outline-2 focus:outline-[#2563EB]"
+              aria-label="Column Header ${cIdx + 1}"
+            />
+          </th>
+        `;
+      });
+      theadHtml += `</tr></thead>`;
+
+      // Build Body Rows
+      let tbodyHtml = `<tbody class="divide-y divide-[#E5E7EB]">`;
+      sheet.rows.forEach((row, rIdx) => {
+        const isSelectedRow = APP_STATE.selectedCell.row === rIdx;
+        tbodyHtml += `<tr class="${isSelectedRow ? 'bg-blue-50/20' : 'hover:bg-slate-50/60'}">`;
+        tbodyHtml += `<td class="py-1.5 px-2 text-center font-mono text-[11px] text-[#64748B] border-r border-[#E5E7EB] bg-[#F8FAFC] select-none">${rIdx + 1}</td>`;
+
+        sheet.headers.forEach((_, cIdx) => {
+          const val = row[cIdx] !== undefined ? row[cIdx] : '';
+          const isMatch = searchQuery && String(val).toLowerCase().includes(searchQuery);
+          tbodyHtml += `
+            <td class="border-r border-[#E5E7EB] p-0 ${isMatch ? 'bg-amber-100' : ''}">
+              <input
+                type="text"
+                data-row="${rIdx}"
+                data-col="${cIdx}"
+                value="${escapeHtml(val)}"
+                onfocus="selectCell(${rIdx}, ${cIdx})"
+                onchange="updateCellValue(${rIdx}, ${cIdx}, this.value)"
+                onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx})"
+                onpaste="handleCellPaste(event, ${rIdx}, ${cIdx})"
+                class="sheet-cell w-full px-2.5 py-1.5 bg-transparent text-xs text-[#111827]"
+              />
+            </td>
+          `;
+        });
+        tbodyHtml += `</tr>`;
+      });
+      tbodyHtml += `</tbody>`;
+
+      table.innerHTML = theadHtml + tbodyHtml;
+      renderWorksheetTabs();
+    }
+
+    function renderWorksheetTabs() {
+      const container = document.getElementById('worksheet-tabs-container');
+      container.innerHTML = APP_STATE.workbooks.map((ws, idx) => {
+        const active = idx === APP_STATE.activeSheetIndex;
+        return `
+          <div onclick="switchWorksheet(${idx})" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium border cursor-pointer transition shrink-0 ${active ? 'bg-white border-[#2563EB] text-[#2563EB] font-semibold shadow-2xs' : 'bg-transparent border-transparent text-[#64748B] hover:bg-white hover:text-[#111827]'}">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>${escapeHtml(ws.name)}</span>
+            ${APP_STATE.workbooks.length > 1 ? `<button onclick="deleteWorksheet(${idx}, event)" class="ml-1 text-slate-400 hover:text-[#DC2626]" title="Close Sheet">×</button>` : ''}
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function switchWorksheet(idx) {
+      APP_STATE.activeSheetIndex = idx;
+      APP_STATE.selectedCell = { row: 0, col: 0 };
+      renderSpreadsheet();
+    }
+
+    function selectCell(row, col) {
+      APP_STATE.selectedCell = { row, col };
+    }
+
+    function updateHeaderValue(colIdx, newVal) {
+      const sheet = getActiveSheet();
+      if (sheet.headers[colIdx] === newVal) return;
+      pushUndoState(sheet);
+      sheet.headers[colIdx] = newVal;
+    }
+
+    function updateCellValue(rowIdx, colIdx, newVal) {
+      const sheet = getActiveSheet();
+      if (sheet.rows[rowIdx][colIdx] === newVal) return;
+      pushUndoState(sheet);
+      sheet.rows[rowIdx][colIdx] = newVal;
+    }
+
+    function handleCellKeydown(e, rIdx, cIdx) {
+      const sheet = getActiveSheet();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const nextRow = Math.min(sheet.rows.length - 1, rIdx + 1);
+        const nextInput = document.querySelector(`input[data-row="${nextRow}"][data-col="${cIdx}"]`);
+        if (nextInput) nextInput.focus();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undoSheet();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redoSheet();
+      }
+    }
+
+    // Multi-cell TSV/CSV clipboard paste support
+    function handleCellPaste(e, startRow, startCol) {
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if (!text || (!text.includes('\t') && !text.includes('\n'))) return;
+      e.preventDefault();
+
+      const sheet = getActiveSheet();
+      pushUndoState(sheet);
+
+      const pastedRows = text.replace(/\r/g, '').split('\n').filter(line => line.length > 0).map(line => line.split('\t'));
+      pastedRows.forEach((pRow, rOffset) => {
+        const targetR = startRow + rOffset;
+        while (sheet.rows.length <= targetR) {
+          sheet.rows.push(new Array(sheet.headers.length).fill(''));
+        }
+        pRow.forEach((val, cOffset) => {
+          const targetC = startCol + cOffset;
+          while (sheet.headers.length <= targetC) {
+            const colLetter = String.fromCharCode(65 + (sheet.headers.length % 26));
+            sheet.headers.push(`Column ${colLetter}`);
+            sheet.rows.forEach(r => r.push(''));
+          }
+          sheet.rows[targetR][targetC] = val;
+        });
+      });
+
+      renderSpreadsheet();
+      showToast('Pasted tabular data into spreadsheet.', 'success');
+    }
+
+    function addSheetRow() {
+      const sheet = getActiveSheet();
+      pushUndoState(sheet);
+      sheet.rows.push(new Array(sheet.headers.length).fill(''));
+      renderSpreadsheet();
+    }
+
+    function deleteSelectedRow() {
+      const sheet = getActiveSheet();
+      if (sheet.rows.length <= 1) {
+        showToast('At least one row must remain in the worksheet.', 'info');
+        return;
+      }
+      pushUndoState(sheet);
+      const targetRow = Math.min(APP_STATE.selectedCell.row, sheet.rows.length - 1);
+      sheet.rows.splice(targetRow, 1);
+      APP_STATE.selectedCell.row = Math.max(0, targetRow - 1);
+      renderSpreadsheet();
+    }
+
+    function addSheetColumn() {
+      const sheet = getActiveSheet();
+      pushUndoState(sheet);
+      const colLetter = String.fromCharCode(65 + (sheet.headers.length % 26));
+      sheet.headers.push(`Column ${colLetter}`);
+      sheet.rows.forEach(r => r.push(''));
+      renderSpreadsheet();
+    }
+
+    function deleteSelectedColumn() {
+      const sheet = getActiveSheet();
+      if (sheet.headers.length <= 1) {
+        showToast('At least one column must remain in the worksheet.', 'info');
+        return;
+      }
+      pushUndoState(sheet);
+      const targetCol = Math.min(APP_STATE.selectedCell.col, sheet.headers.length - 1);
+      sheet.headers.splice(targetCol, 1);
+      sheet.rows.forEach(r => r.splice(targetCol, 1));
+      APP_STATE.selectedCell.col = Math.max(0, targetCol - 1);
+      renderSpreadsheet();
+    }
+
+    function sortActiveColumn() {
+      const sheet = getActiveSheet();
+      const col = APP_STATE.selectedCell.col || 0;
+      pushUndoState(sheet);
+      const dir = APP_STATE.sortDirection === 'asc' ? 1 : -1;
+      APP_STATE.sortDirection = APP_STATE.sortDirection === 'asc' ? 'desc' : 'asc';
+
+      sheet.rows.sort((a, b) => {
+        const valA = (a[col] || '').trim();
+        const valB = (b[col] || '').trim();
+        const numA = parseFloat(valA.replace(/[$,]/g, ''));
+        const numB = parseFloat(valB.replace(/[$,]/g, ''));
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return (numA - numB) * dir;
+        }
+        return valA.localeCompare(valB, undefined, { numeric: true }) * dir;
+      });
+
+      renderSpreadsheet();
+      showToast(`Sorted "${sheet.headers[col]}" (${APP_STATE.sortDirection === 'desc' ? 'A→Z' : 'Z→A'}).`, 'info');
+    }
+
+    function copySheetToClipboard() {
+      const sheet = getActiveSheet();
+      const lines = [
+        sheet.headers.join('\t'),
+        ...sheet.rows.map(r => r.join('\t'))
+      ].join('\n');
+
+      const ta = document.createElement('textarea');
+      ta.value = lines;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('Worksheet copied to clipboard (ready to paste into Excel).', 'success');
+      } catch (err) {
+        showToast('Unable to copy automatically.', 'error');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function addBlankWorksheet() {
+      const num = APP_STATE.workbooks.length + 1;
+      APP_STATE.workbooks.push({
+        id: 'sheet-' + Date.now(),
+        name: `Sheet${num}`,
+        headers: ['Column A', 'Column B', 'Column C'],
+        rows: [
+          ['', '', ''],
+          ['', '', ''],
+          ['', '', '']
+        ],
+        sourceImageId: null
+      });
+      APP_STATE.activeSheetIndex = APP_STATE.workbooks.length - 1;
+      renderSpreadsheet();
+    }
+
+    function deleteWorksheet(idx, event) {
+      if (event) event.stopPropagation();
+      if (APP_STATE.workbooks.length <= 1) return;
+      APP_STATE.workbooks.splice(idx, 1);
+      APP_STATE.activeSheetIndex = Math.max(0, idx - 1);
+      renderSpreadsheet();
+    }
+
+    function renameActiveWorksheet() {
+      const sheet = getActiveSheet();
+      if (!sheet) return;
+      // Inline prompt bar inside worksheet tabs area
+      const container = document.getElementById('worksheet-tabs-container');
+      container.innerHTML = `
+        <div class="flex items-center gap-1.5">
+          <input id="rename-sheet-input" type="text" value="${escapeHtml(sheet.name)}" maxlength="31" class="px-2.5 py-1 text-xs border border-[#2563EB] rounded-md bg-white text-[#111827] focus:outline-none" />
+          <button onclick="commitWorksheetRename()" class="px-2.5 py-1 text-xs font-semibold bg-[#2563EB] text-white rounded-md cursor-pointer">Save</button>
+          <button onclick="renderWorksheetTabs()" class="px-2 py-1 text-xs border border-[#E5E7EB] bg-white rounded-md cursor-pointer">Cancel</button>
+        </div>
+      `;
+      const inp = document.getElementById('rename-sheet-input');
+      inp.focus();
+      inp.select();
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') commitWorksheetRename();
+        if (e.key === 'Escape') renderWorksheetTabs();
+      });
+    }
+
+    function commitWorksheetRename() {
+      const inp = document.getElementById('rename-sheet-input');
+      const sheet = getActiveSheet();
+      if (inp && sheet && inp.value.trim()) {
+        sheet.name = sanitizeSheetName(inp.value);
+        showToast(`Renamed worksheet to "${sheet.name}".`, 'success');
+      }
+      renderWorksheetTabs();
+    }
+
+    function combineAllWorksheets() {
+      if (APP_STATE.workbooks.length < 2) {
+        showToast('Upload and extract at least two images to combine worksheets.', 'info');
+        return;
+      }
+
+      const maxCols = Math.max(...APP_STATE.workbooks.map(s => s.headers.length));
+      const mergedHeaders = Array.from({ length: maxCols }, (_, i) => APP_STATE.workbooks[0].headers[i] || `Column ${i + 1}`);
+      const mergedRows = [];
+
+      APP_STATE.workbooks.forEach((ws, idx) => {
+        if (idx > 0) {
+          // Separator row indicating source sheet name
+          const banner = new Array(maxCols).fill('');
+          banner[0] = `--- ${ws.name} ---`;
+          mergedRows.push(banner);
+          const subHdr = new Array(maxCols).fill('');
+          ws.headers.forEach((h, c) => { subHdr[c] = h; });
+          mergedRows.push(subHdr);
+        }
+        ws.rows.forEach(r => {
+          const padded = new Array(maxCols).fill('');
+          r.forEach((val, c) => { padded[c] = val; });
+          mergedRows.push(padded);
+        });
+      });
+
+      APP_STATE.workbooks.push({
+        id: 'sheet-combined-' + Date.now(),
+        name: 'Combined_Sheets',
+        headers: mergedHeaders,
+        rows: mergedRows,
+        sourceImageId: null
+      });
+      APP_STATE.activeSheetIndex = APP_STATE.workbooks.length - 1;
+      renderSpreadsheet();
+      showToast('Combined all worksheets into "Combined_Sheets".', 'success');
+    }
+
+    /*************************************************************************
+     * 10. GENUINE EXCEL (.XLSX) & CSV EXPORT SERVICE (SHEETJS)
+     *************************************************************************/
+    function parseSmartCellValue(raw) {
+      if (raw === null || raw === undefined) return '';
+      const trimmed = String(raw).trim();
+      if (trimmed === '') return '';
+      // Preserve clean numeric values as actual Excel numbers
+      if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+        const num = Number(trimmed);
+        if (!Number.isNaN(num)) return num;
+      }
+      return trimmed;
+    }
+
+    function buildSheetJSWorkbook(sheetsArray) {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('SheetJS (xlsx) library is not loaded.');
+      }
+      const wb = XLSX.utils.book_new();
+
+      sheetsArray.forEach((sheet, idx) => {
+        const aoa = [
+          sheet.headers,
+          ...sheet.rows.map(row => row.map(parseSmartCellValue))
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Auto-calculate optimal column widths
+        const colWidths = sheet.headers.map((h, cIdx) => {
+          let maxLen = String(h || '').length;
+          sheet.rows.forEach(r => {
+            const cellLen = String(r[cIdx] || '').length;
+            if (cellLen > maxLen) maxLen = cellLen;
+          });
+          return { wch: Math.min(50, Math.max(12, maxLen + 4)) };
+        });
+        ws['!cols'] = colWidths;
+
+        const safeName = sanitizeSheetName(sheet.name || `Sheet${idx + 1}`);
+        XLSX.utils.book_append_sheet(wb, ws, safeName);
+      });
+
+      return wb;
+    }
+
+    function exportWorkbookXLSX(customSheets = null, filename = 'ceet-export.xlsx') {
+      try {
+        const sheetsToExport = customSheets || APP_STATE.workbooks;
+        const wb = buildSheetJSWorkbook(sheetsToExport);
+        XLSX.writeFile(wb, filename);
+        showToast(`Downloaded "${filename}" (${sheetsToExport.length} worksheet${sheetsToExport.length > 1 ? 's' : ''}).`, 'success');
+      } catch (err) {
+        console.error('Excel export error:', err);
+        showToast(`Failed to generate Excel file: ${err.message}`, 'error');
+      }
+    }
+
+    function exportWorkbookCSV() {
+      try {
+        const sheet = getActiveSheet();
+        const wb = buildSheetJSWorkbook([sheet]);
+        const csvOutput = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+        const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${sanitizeSheetName(sheet.name).toLowerCase()}-ceet.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Downloaded CSV for "${sheet.name}".`, 'success');
+      } catch (err) {
+        showToast(`CSV export failed: ${err.message}`, 'error');
+      }
+    }
+
+    /*************************************************************************
+     * 11. HISTORY PERSISTENCE & HISTORY PAGE RENDERING
+     *************************************************************************/
+    async function saveCurrentWorkbookToHistory(sourceLabel) {
+      const activeSheet = getActiveSheet();
+      const record = {
+        id: 'conv-' + Date.now(),
+        name: activeSheet ? activeSheet.name : 'CEET Extraction',
+        originalFilename: sourceLabel || 'Uploaded Image',
+        timestamp: Date.now(),
+        dateFormatted: new Date().toLocaleString(),
+        sheets: JSON.parse(JSON.stringify(APP_STATE.workbooks)),
+        rowCount: activeSheet ? activeSheet.rows.length : 0,
+        colCount: activeSheet ? activeSheet.headers.length : 0
+      };
+      await HistoryService.saveConversion(record);
+    }
+
+    async function renderHistoryPage() {
+      const container = document.getElementById('history-list-container');
+      const items = await HistoryService.getAll();
+
+      if (!items.length) {
+        container.innerHTML = `
+          <div class="bg-white rounded-xl border border-[#E5E7EB] p-12 text-center">
+            <i data-lucide="history" class="w-10 h-10 text-slate-300 mx-auto mb-3"></i>
+            <h3 class="text-base font-semibold text-[#111827]">No conversion history yet</h3>
+            <p class="text-xs text-[#64748B] mt-1 mb-5">Converted spreadsheets are automatically saved locally in your browser.</p>
+            <button onclick="navigateTo('converter')" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-xs font-semibold cursor-pointer">
+              <span>Convert an Image Now</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="bg-white rounded-xl border border-[#E5E7EB] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+          <div class="space-y-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-[#16A34A] shrink-0"></i>
+              <h3 class="text-sm font-bold text-[#111827] truncate">${escapeHtml(item.name)}</h3>
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#E5E7EB] text-[#64748B]">
+                ${item.sheets.length} sheet${item.sheets.length > 1 ? 's' : ''} • ${item.rowCount}×${item.colCount}
+              </span>
+            </div>
+            <div class="text-xs text-[#64748B] flex flex-wrap items-center gap-3">
+              <span>Source: <strong class="font-medium text-[#111827]">${escapeHtml(item.originalFilename)}</strong></span>
+              <span>•</span>
+              <span>${escapeHtml(item.dateFormatted)}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button onclick="reopenHistoryItem('${item.id}')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              <span>Open in Editor</span>
+            </button>
+            <button onclick="exportHistoryItem('${item.id}')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-xs font-semibold text-[#111827] cursor-pointer">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-[#16A34A]"></i>
+              <span>Export</span>
+            </button>
+            <button onclick="promptRenameHistoryItem('${item.id}')" class="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-[#F8FAFC] text-[#64748B] hover:text-[#111827] cursor-pointer" title="Rename">
+              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="deleteHistoryItem('${item.id}')" class="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-red-50 text-[#64748B] hover:text-[#DC2626] cursor-pointer" title="Delete">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    async function reopenHistoryItem(id) {
+      const items = await HistoryService.getAll();
+      const found = items.find(i => i.id === id);
+      if (!found) return;
+      APP_STATE.workbooks = JSON.parse(JSON.stringify(found.sheets));
+      APP_STATE.activeSheetIndex = 0;
+      navigateTo('converter');
+      showToast(`Loaded "${found.name}" into Spreadsheet Editor.`, 'success');
+    }
+
+    async function exportHistoryItem(id) {
+      const items = await HistoryService.getAll();
+      const found = items.find(i => i.id === id);
+      if (!found) return;
+      const cleanFile = `${sanitizeSheetName(found.name).toLowerCase()}-ceet.xlsx`;
+      exportWorkbookXLSX(found.sheets, cleanFile);
+    }
+
+    async function promptRenameHistoryItem(id) {
+      const items = await HistoryService.getAll();
+      const found = items.find(i => i.id === id);
+      if (!found) return;
+      found.name = found.name.endsWith(' (Edited)') ? found.name.replace(' (Edited)', '') : `${found.name} (Edited)`;
+      await HistoryService.saveConversion(found);
+      renderHistoryPage();
+      showToast(`Renamed record to "${found.name}".`, 'info');
+    }
+
+    async function deleteHistoryItem(id) {
+      await HistoryService.deleteById(id);
+      renderHistoryPage();
+      showToast('Deleted conversion from local history.', 'info');
+    }
+
+    async function clearAllHistory() {
+      await HistoryService.clearAll();
+      if (APP_STATE.currentPage === 'history') {
+        renderHistoryPage();
+      }
+      showToast('All local conversion history cleared.', 'success');
+    }
+
+    /*************************************************************************
+     * 12. SETTINGS PERSISTENCE
+     *************************************************************************/
+    function loadSavedSettings() {
+      try {
+        const raw = localStorage.getItem('ceet_settings');
+        if (raw) {
+          APP_STATE.settings = { ...APP_STATE.settings, ...JSON.parse(raw) };
+        }
+      } catch (e) {}
+
+      document.getElementById('setting-export-format').value = APP_STATE.settings.exportFormat;
+      document.getElementById('setting-ocr-lang').value = APP_STATE.settings.ocrLang;
+      document.getElementById('setting-auto-gray').checked = APP_STATE.settings.autoGrayscale;
+      document.getElementById('setting-auto-upscale').checked = APP_STATE.settings.autoUpscale;
+    }
+
+    function saveSettingsFromUI() {
+      APP_STATE.settings.exportFormat = document.getElementById('setting-export-format').value;
+      APP_STATE.settings.ocrLang = document.getElementById('setting-ocr-lang').value;
+      APP_STATE.settings.autoGrayscale = document.getElementById('setting-auto-gray').checked;
+      APP_STATE.settings.autoUpscale = document.getElementById('setting-auto-upscale').checked;
+
+      try {
+        localStorage.setItem('ceet_settings', JSON.stringify(APP_STATE.settings));
+      } catch (e) {}
+
+      showToast('Settings saved locally.', 'success');
+    }
+
+    function clearTemporaryFilesAndReset() {
+      clearAllImages();
+      localStorage.removeItem('ceet_settings');
+      APP_STATE.settings = {
+        exportFormat: 'xlsx',
+        ocrLang: 'eng',
+        autoGrayscale: false,
+        autoUpscale: false
+      };
+      loadSavedSettings();
+      showToast('Temporary images cleared and settings reset to defaults.', 'success');
+    }
+  </script>
+</body>
+</html>
