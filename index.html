@@ -891,76 +891,8 @@
       </div>
     </section>
 
-    <!-- ==================== PAGE 5: PRIVACY POLICY ==================== -->
-    <section id="page-privacy" class="page-view hidden">
-      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        <div class="pb-4 border-b border-[#E5E7EB]">
-          <h1 class="text-2xl font-bold tracking-tight text-[#111827]">Privacy Policy</h1>
-          <p class="text-sm text-[#64748B] mt-1">Local-first architecture designed for confidential documents.</p>
-        </div>
-
-        <!-- Prominent Required Privacy Statement -->
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 flex items-start gap-3.5">
-          <div class="w-9 h-9 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shrink-0">
-            <i data-lucide="shield-check" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h2 class="text-sm font-bold text-[#111827]">Zero-Server Guarantee</h2>
-            <p class="text-sm text-[#111827] mt-1 leading-relaxed">
-              "Your images are processed directly in your browser. CEET does not require an external AI API or cloud OCR service."
-            </p>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 space-y-5 text-sm text-[#64748B] leading-relaxed shadow-2xs">
-          <div>
-            <h3 class="text-base font-semibold text-[#111827] mb-1.5">1. Local WebAssembly OCR Processing</h3>
-            <p>All optical character recognition is performed inside your browser tab using Tesseract.js compiled to WebAssembly. Your uploaded PNG, JPG, or WEBP images are read into local HTML5 Canvas memory and are never transmitted over the network to any processing server.</p>
-          </div>
-          <div>
-            <h3 class="text-base font-semibold text-[#111827] mb-1.5">2. No External AI APIs or Credentials</h3>
-            <p>CEET does not connect to OpenAI, Gemini, Claude, or third-party cloud OCR endpoints. No API keys, user accounts, or tracking cookies are required to use any feature of the platform.</p>
-          </div>
-          <div>
-            <h3 class="text-base font-semibold text-[#111827] mb-1.5">3. Local IndexedDB Storage</h3>
-            <p>When you convert an image, the extracted spreadsheet rows and metadata are stored exclusively in your browser's local IndexedDB database (<code class="text-xs bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E5E7EB]">ceet_db</code>) so you can reopen past conversions. You may delete individual records or wipe all local history at any time from the History or Settings pages.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== PAGE 6: ABOUT ==================== -->
-    <section id="page-about" class="page-view hidden">
-      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        <div class="pb-4 border-b border-[#E5E7EB]">
-          <h1 class="text-2xl font-bold tracking-tight text-[#111827]">About CEET</h1>
-          <p class="text-sm text-[#64748B] mt-1">Deterministic, AI-free document-to-spreadsheet conversion powered by CETA.</p>
-        </div>
-
-        <div class="bg-white rounded-xl border border-[#E5E7EB] p-6 space-y-4 text-sm text-[#64748B] leading-relaxed shadow-2xs">
-          <p class="text-[#111827] font-medium text-base">
-            CEET was built to solve a simple problem: turning printed tables, receipts, attendance sheets, and exam marks into clean Excel workbooks without uploading private files to cloud AI services.
-          </p>
-          <p>
-            Unlike cloud LLM converters that can hallucinate digits or impose strict page quotas, CEET combines three proven open technologies directly inside your browser:
-          </p>
-          <ul class="space-y-2.5 pt-1">
-            <li class="flex items-start gap-2.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5"></i>
-              <span><strong class="text-[#111827]">HTML5 Canvas Preprocessing:</strong> Real-time grayscale, contrast/brightness normalization, 3×3 sharpening convolution, rotation, and region cropping.</span>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5"></i>
-              <span><strong class="text-[#111827]">Tesseract.js + Coordinate Clustering:</strong> Word-level bounding boxes (<code class="text-xs">x0, y0, x1, y1</code>) grouped into rows and column intervals to reconstruct tabular layouts faithfully.</span>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5"></i>
-              <span><strong class="text-[#111827]">SheetJS (.xlsx) Generation:</strong> Standards-compliant Excel workbook creation supporting multiple tabs, numeric type preservation, and auto-sized columns.</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    
+   
 
   </main>
 
